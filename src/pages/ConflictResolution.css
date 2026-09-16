@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+.conflict-page {
+  @apply space-y-6 pb-8;
+}
+
+.conflict-header h1 {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.conflict-header p {
+  @apply text-sm text-slate-500 mt-1;
+}
+
+/* Info */
+.info-card {
+  @apply flex items-start gap-3 bg-amber-50 text-amber-800 rounded-2xl p-4;
+}
+
+.info-card h3 {
+  @apply font-semibold text-sm;
+}
+
+.info-card p {
+  @apply text-xs mt-1 opacity-90;
+}
+
+/* Section */
+.conflict-section h2 {
+  @apply text-lg font-semibold text-slate-800 mb-3;
+}
+
+/* Conflict Card */
+.conflict-list {
+  @apply space-y-4;
+}
+
+.conflict-card {
+  @apply bg-white rounded-2xl border border-slate-100 p-5 shadow-sm;
+}
+
+.conflict-top {
+  @apply flex items-center justify-between mb-2;
+}
+
+.conflict-type {
+  @apply flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg;
+}
+
+.conflict-time {
+  @apply text-xs text-slate-400;
+}
+
+.conflict-card h3 {
+  @apply text-base font-semibold text-slate-800 mb-3;
+}
+
+.change-boxes {
+  @apply space-y-2 mb-4;
+}
+
+.change-box {
+  @apply rounded-xl p-3 text-sm;
+}
+
+.change-box.local {
+  @apply bg-blue-50 text-blue-800;
+}
+
+.change-box.server {
+  @apply bg-slate-50 text-slate-700;
+}
+
+.change-box .label {
+  @apply block text-xs font-semibold mb-1 opacity-80;
+}
+
+.resolve-actions {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.btn-local {
+  @apply bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium py-2.5 rounded-xl transition;
+}
+
+.btn-server {
+  @apply bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium py-2.5 rounded-xl transition;
+}
+
+/* Empty */
+.empty-conflict {
+  @apply flex flex-col items-center justify-center py-14 text-slate-400 bg-white rounded-2xl border border-slate-100;
+}
+
+.empty-conflict p {
+  @apply mt-3 font-medium text-slate-600;
+}
+
+.empty-conflict span {
+  @apply text-sm mt-1;
+}
+
+/* Resolved */
+.resolved-list {
+  @apply space-y-2;
+}
+
+.resolved-item {
+  @apply flex items-center gap-3 bg-green-50 text-green-800 rounded-2xl p-4;
+}
+
+.resolved-item h4 {
+  @apply text-sm font-medium;
+}
+
+.resolved-item p {
+  @apply text-xs opacity-80 mt-0.5;
+}

@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+.home-page {
+  @apply space-y-7 pb-8;
+}
+
+/* Top Bar */
+.top-bar {
+  @apply flex items-center gap-3;
+}
+
+.search-box {
+  @apply flex-1 flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-slate-400;
+}
+
+.search-box input {
+  @apply flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400;
+}
+
+.notification-btn {
+  @apply w-11 h-11 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-600;
+}
+
+/* Welcome Banner - Student */
+.welcome-banner {
+  @apply bg-blue-700 rounded-3xl p-6 md:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative;
+}
+
+.welcome-left {
+  @apply flex-1 relative z-10;
+}
+
+.welcome-left h1 {
+  @apply text-2xl md:text-3xl font-bold mb-2;
+}
+
+.welcome-left p {
+  @apply text-blue-100 text-sm md:text-base max-w-md mb-6;
+}
+
+.banner-actions {
+  @apply flex flex-wrap gap-3;
+}
+
+.banner-btn {
+  @apply px-5 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2;
+}
+
+.banner-btn.primary {
+  @apply bg-white text-blue-700 hover:bg-blue-50;
+}
+
+.banner-btn.secondary {
+  @apply bg-blue-600 text-white hover:bg-blue-500;
+}
+
+/* Illustration */
+.welcome-right {
+  @apply relative z-10;
+}
+
+.illustration-card {
+  @apply w-36 h-28 relative;
+}
+
+.book {
+  @apply absolute rounded-xl shadow-lg;
+}
+
+.book-1 {
+  @apply w-20 h-24 bg-blue-300 top-0 left-6 rotate-[-8deg];
+}
+
+.book-2 {
+  @apply w-20 h-24 bg-indigo-300 top-1 left-12 rotate-[4deg];
+}
+
+.book-3 {
+  @apply w-20 h-24 bg-violet-300 top-2 left-16 rotate-[12deg];
+}
+
+/* Stats */
+.stats-row {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-3;
+}
+
+.stat-item {
+  @apply bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3 shadow-sm;
+}
+
+.stat-icon {
+  @apply w-10 h-10 rounded-xl flex items-center justify-center;
+}
+
+.stat-icon.blue { @apply bg-blue-50 text-blue-600; }
+.stat-icon.indigo { @apply bg-indigo-50 text-indigo-600; }
+.stat-icon.violet { @apply bg-violet-50 text-violet-600; }
+.stat-icon.amber { @apply bg-amber-50 text-amber-600; }
+.stat-icon.green { @apply bg-green-50 text-green-600; }
+
+.stat-item strong {
+  @apply block text-lg font-bold text-slate-800;
+}
+
+.stat-item span {
+  @apply text-xs text-slate-500;
+}
+
+/* Section */
+.section-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.section-header h2 {
+  @apply text-lg font-semibold text-slate-800;
+}
+
+.view-all {
+  @apply flex items-center gap-1 text-sm text-blue-600 font-medium;
+}
+
+/* Courses Grid - Student */
+.courses-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.course-card {
+  @apply rounded-2xl p-5 text-white shadow-sm;
+}
+
+.course-card.blue { @apply bg-blue-600; }
+.course-card.indigo { @apply bg-indigo-600; }
+.course-card.violet { @apply bg-violet-600; }
+
+.course-code {
+  @apply text-xs opacity-80 font-medium;
+}
+
+.course-top h3 {
+  @apply text-lg font-semibold mt-1 mb-2;
+}
+
+.course-meta {
+  @apply flex items-center gap-2 text-sm opacity-90 mb-4;
+}
+
+.course-progress {
+  @apply flex items-center gap-3;
+}
+
+.progress-track {
+  @apply flex-1 h-2 bg-white/20 rounded-full overflow-hidden;
+}
+
+.progress-bar {
+  @apply h-full bg-white rounded-full;
+}
+
+.course-progress span {
+  @apply text-sm font-medium;
+}
+
+/* Activity */
+.activity-card {
+  @apply bg-white rounded-2xl border border-slate-100 overflow-hidden;
+}
+
+.activity-row {
+  @apply flex items-center gap-4 p-4 border-b border-slate-100 last:border-b-0;
+}
+
+.activity-icon {
+  @apply w-10 h-10 rounded-full flex items-center justify-center;
+}
+
+.activity-icon.blue { @apply bg-blue-50 text-blue-600; }
+.activity-icon.green { @apply bg-green-50 text-green-600; }
+.activity-icon.violet { @apply bg-violet-50 text-violet-600; }
+
+.activity-text h4 {
+  @apply text-sm font-medium text-slate-800;
+}
+
+.activity-text p {
+  @apply text-xs text-slate-500 mt-0.5;
+}
+
+/* ========== TUTOR STYLES ========== */
+
+.tutor-banner {
+  @apply bg-indigo-700;
+}
+
+.tutor-badge {
+  @apply flex flex-col items-center gap-2 bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-white;
+}
+
+.tutor-badge span {
+  @apply text-sm font-medium;
+}
+
+.tutor-actions {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-3;
+}
+
+.tutor-action-card {
+  @apply bg-white border border-slate-100 rounded-2xl p-5 flex flex-col items-center gap-3 text-sm font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 transition shadow-sm;
+}
+
+.tutor-action-card svg {
+  @apply text-blue-600;
+}

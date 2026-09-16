@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+.courses-page {
+  @apply space-y-5 pb-8;
+}
+
+/* Header */
+.courses-header {
+  @apply flex items-center justify-between gap-4;
+}
+
+.courses-header h1 {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.courses-header p {
+  @apply text-sm text-slate-500 mt-0.5;
+}
+
+.new-course-btn {
+  @apply flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition;
+}
+
+/* Search */
+.search-bar {
+  @apply flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-slate-400;
+}
+
+.search-bar input {
+  @apply flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400;
+}
+
+/* Courses List */
+.courses-list {
+  @apply space-y-3;
+}
+
+.course-item {
+  @apply bg-white rounded-2xl border border-slate-100 p-4 flex items-start gap-4 shadow-sm block no-underline text-inherit hover:border-blue-200 transition;
+}
+
+.course-badge {
+  @apply w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white;
+}
+
+.course-badge.blue { @apply bg-blue-600; }
+.course-badge.indigo { @apply bg-indigo-600; }
+.course-badge.violet { @apply bg-violet-600; }
+.course-badge.sky { @apply bg-sky-600; }
+
+.course-details {
+  @apply flex-1 min-w-0;
+}
+
+.course-top {
+  @apply flex items-center justify-between gap-2 mb-1;
+}
+
+.course-code {
+  @apply text-xs font-semibold text-slate-500;
+}
+
+.status {
+  @apply flex items-center gap-1 text-xs font-medium;
+}
+
+.status.downloaded {
+  @apply text-green-600;
+}
+
+.status.not-downloaded {
+  @apply text-amber-600;
+}
+
+.status.pending {
+  @apply text-amber-600;
+}
+
+.course-details h3 {
+  @apply text-base font-semibold text-slate-800 truncate;
+}
+
+.lecturer {
+  @apply text-xs text-slate-500 mt-0.5 mb-3;
+}
+
+.progress-section {
+  @apply flex items-center gap-3;
+}
+
+.progress-track {
+  @apply flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden;
+}
+
+.progress-bar {
+  @apply h-full bg-blue-600 rounded-full;
+}
+
+.progress-section span {
+  @apply text-xs font-medium text-slate-600;
+}
+
+/* Empty State */
+.empty-state {
+  @apply flex flex-col items-center justify-center py-16 text-slate-400;
+}
+
+.empty-state p {
+  @apply mt-3 text-sm;
+}
+
+/* Modal */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/40 z-50 flex items-end md:items-center justify-center p-4;
+}
+
+.modal {
+  @apply bg-white w-full max-w-md rounded-3xl p-6 shadow-xl;
+}
+
+.modal-header {
+  @apply flex items-center justify-between mb-5;
+}
+
+.modal-header h2 {
+  @apply text-lg font-bold text-slate-800;
+}
+
+.modal-header button {
+  @apply text-slate-400 text-xl;
+}
+
+.form-group {
+  @apply mb-4;
+}
+
+.form-group label {
+  @apply block text-sm font-medium text-slate-700 mb-1.5;
+}
+
+.form-group input,
+.form-group textarea {
+  @apply w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.form-group textarea {
+  @apply resize-none;
+}
+
+.offline-note {
+  @apply bg-amber-50 text-amber-700 text-sm px-4 py-3 rounded-xl mb-4;
+}
+
+.submit-btn {
+  @apply w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl transition;
+}

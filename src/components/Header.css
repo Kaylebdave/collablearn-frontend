@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+.header {
+  @apply bg-blue-800 text-white shadow-md;
+}
+
+.header-container {
+  @apply max-w-6xl mx-auto px-4 py-4 flex items-center justify-between;
+}
+
+.logo-section {
+  @apply flex items-center gap-3;
+}
+
+.logo-icon {
+  @apply w-9 h-9 bg-white rounded-lg flex items-center justify-center text-blue-800 font-bold text-lg;
+}
+
+.logo-text {
+  @apply text-xl font-bold tracking-tight;
+}
+
+.status-section {
+  @apply flex items-center gap-2 text-sm;
+}
+
+.status-dot {
+  @apply w-2.5 h-2.5 rounded-full;
+}
+
+.status-dot.online {
+  @apply bg-green-400;
+}
+
+.status-dot.offline {
+  @apply bg-amber-400;
+}

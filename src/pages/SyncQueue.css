@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+.sync-page {
+  @apply space-y-6 pb-8;
+}
+
+.sync-header h1 {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.sync-header p {
+  @apply text-sm text-slate-500 mt-1;
+}
+
+/* Status Card */
+.status-card {
+  @apply flex items-center gap-4 p-4 rounded-2xl;
+}
+
+.status-card.online {
+  @apply bg-green-50 text-green-800;
+}
+
+.status-card.offline {
+  @apply bg-amber-50 text-amber-800;
+}
+
+.status-icon {
+  @apply w-11 h-11 rounded-xl flex items-center justify-center;
+}
+
+.status-card.online .status-icon {
+  @apply bg-green-100 text-green-600;
+}
+
+.status-card.offline .status-icon {
+  @apply bg-amber-100 text-amber-600;
+}
+
+.status-card h3 {
+  @apply font-semibold;
+}
+
+.status-card p {
+  @apply text-sm opacity-80 mt-0.5;
+}
+
+.last-synced {
+  @apply block text-xs mt-1 opacity-70;
+}
+
+/* Pending Section */
+.pending-section h2 {
+  @apply text-lg font-semibold text-slate-800 mb-3;
+}
+
+.pending-list {
+  @apply space-y-3;
+}
+
+.pending-item {
+  @apply bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm;
+}
+
+.pending-icon {
+  @apply w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center;
+}
+
+.pending-info {
+  @apply flex-1 min-w-0;
+}
+
+.pending-info h4 {
+  @apply text-sm font-medium text-slate-800 truncate;
+}
+
+.pending-info p {
+  @apply text-xs text-slate-500 mt-0.5;
+}
+
+.pending-badge {
+  @apply text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg;
+}
+
+/* Empty */
+.empty-sync {
+  @apply flex flex-col items-center justify-center py-14 text-slate-400 bg-white rounded-2xl border border-slate-100;
+}
+
+.empty-sync p {
+  @apply mt-3 font-medium text-slate-600;
+}
+
+.empty-sync span {
+  @apply text-sm mt-1;
+}
+
+/* Sync Button */
+.sync-now-btn {
+  @apply w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3.5 rounded-2xl transition;
+}
+
+.sync-now-btn.disabled {
+  @apply opacity-60 cursor-not-allowed;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+.app {
+  @apply min-h-screen bg-slate-50 pb-20;
+}
+
+.offline-banner {
+  @apply bg-amber-500 text-white text-center py-2.5 text-sm font-medium;
+}
+
+.main-content {
+  @apply max-w-6xl mx-auto px-4 py-6;
+}

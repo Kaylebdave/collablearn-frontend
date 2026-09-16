@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+.profile-page {
+  @apply max-w-lg mx-auto space-y-6 pb-8;
+}
+
+.profile-header {
+  @apply text-center pt-4;
+}
+
+.avatar {
+  @apply w-20 h-20 rounded-full bg-blue-700 text-white text-3xl font-bold flex items-center justify-center mx-auto mb-4;
+}
+
+.profile-header h1 {
+  @apply text-xl font-bold text-slate-800;
+}
+
+.profile-header p {
+  @apply text-slate-500 text-sm mt-1;
+}
+
+.profile-card {
+  @apply bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100 overflow-hidden;
+}
+
+.profile-item {
+  @apply flex items-center gap-4 p-4;
+}
+
+.profile-item svg {
+  @apply text-blue-600;
+}
+
+.profile-item .label {
+  @apply text-xs text-slate-500;
+}
+
+.profile-item p {
+  @apply text-sm font-medium text-slate-800;
+}
+
+.logout-btn {
+  @apply w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-medium py-3 rounded-2xl hover:bg-red-100 transition;
+}
