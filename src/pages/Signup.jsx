@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { GraduationCap, User } from 'lucide-react'
-import useAuthStore from '../stores/useAuthStore'
+import { signup } from '../api/auth'
 import './Signup.css'
 
 function Signup() {
@@ -11,10 +11,9 @@ function Signup() {
   const [role, setRole] = useState('student')
   const [error, setError] = useState('')
 
-  const signup = useAuthStore((state) => state.signup)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!name || !email || !password) {
@@ -27,8 +26,21 @@ function Signup() {
       return
     }
 
-    signup({ name, email, password, role })
-    navigate('/welcome')
+    setError('')
+    try {
+      await signup({ name, email, password, role })
+      navigate('/verify-otp', { state: { email, name, role } })
+    } catch (requestError) {
+      if (!requestError.response) {
+        setError('Unable to reach CollabLearn. Check your connection and try again.')
+      } else {
+        const responseData = requestError.response.data
+        const apiMessage = typeof responseData === 'string'
+          ? responseData
+          : responseData?.message || responseData?.error
+        setError(apiMessage || 'Unable to create your account. Please try again.')
+      }
+    }
   }
 
   return (

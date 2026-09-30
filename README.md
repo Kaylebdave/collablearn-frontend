@@ -1,5 +1,13 @@
 # React + Vite
 
+## Backend API
+
+The frontend defaults to `http://localhost:8080/api`. Set `VITE_API_BASE_URL` in the Vite environment to the reachable Spring Boot API base URL when running on another host.
+
+## Backend API
+
+The frontend defaults to `http://localhost:8080/api`. Set `VITE_API_BASE_URL` in the Vite environment to the reachable Spring Boot API base URL when running on another host.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

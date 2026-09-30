@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useAuthStore from '../stores/useAuthStore'
+import { login } from '../api/auth'
 import './Login.css'
 
 function Login() {
@@ -8,10 +9,10 @@ function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const login = useAuthStore((state) => state.login)
+  const setAuthenticatedUser = useAuthStore((state) => state.setAuthenticatedUser)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!email || !password) {
@@ -19,11 +20,17 @@ function Login() {
       return
     }
 
-    const success = login(email)
-    if (success) {
+    setError('')
+    try {
+      const data = await login({ email, password })
+      setAuthenticatedUser(data?.user || { ...data, email })
       navigate('/')
-    } else {
-      setError('Invalid email or account not found. Please sign up first.')
+    } catch (requestError) {
+      if (!requestError.response) {
+        setError('Unable to reach CollabLearn. Check your connection and try again.')
+      } else {
+        setError(requestError.response.data?.message || requestError.response.data?.error || 'Invalid email or password.')
+      }
     }
   }
 

@@ -30,6 +30,14 @@
   @apply flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400;
 }
 
+.courses-message {
+  @apply rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700;
+}
+
+.courses-message.error {
+  @apply bg-amber-50 text-amber-700;
+}
+
 /* Courses List */
 .courses-list {
   @apply space-y-3;
@@ -145,6 +153,15 @@
 
 .form-group textarea {
   @apply resize-none;
+}
+
+.field-error {
+  @apply text-xs text-red-600 mt-1;
+}
+
+.form-group input[aria-invalid="true"],
+.form-group textarea[aria-invalid="true"] {
+  @apply border-red-400;
 }
 
 .offline-note {

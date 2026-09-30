@@ -5,6 +5,28 @@ const useAuthStore = create((set) => ({
   isAuthenticated: false,
   justSignedUp: false,
 
+  setAuthenticatedUser: (userData, justSignedUp = false) => {
+    const user = {
+      id: userData.id || userData.userId || Date.now(),
+      name: userData.name || userData.fullName || 'Student',
+      email: userData.email,
+      role: userData.role || 'student',
+      username: userData.username || '',
+      bio: userData.bio || '',
+      department: userData.department || '',
+      level: userData.level || '',
+      institution: userData.institution || ''
+    }
+    set({ user, isAuthenticated: true, justSignedUp })
+    localStorage.setItem('collablearn_user', JSON.stringify(user))
+  },
+
+  updateUser: (userData) => set((state) => {
+    const user = { ...state.user, ...userData }
+    localStorage.setItem('collablearn_user', JSON.stringify(user))
+    return { user }
+  }),
+
   signup: (userData) => {
     const newUser = {
       id: Date.now(),

@@ -1,45 +1,225 @@
 @import "tailwindcss";
 
 .profile-page {
-  @apply max-w-lg mx-auto space-y-6 pb-8;
+  @apply max-w-3xl mx-auto space-y-4 pb-10;
 }
 
-.profile-header {
-  @apply text-center pt-4;
+.profile-hero-card {
+  @apply bg-blue-700 rounded-3xl p-5 sm:p-6 text-white flex flex-col sm:flex-row sm:items-start gap-4;
 }
 
-.avatar {
-  @apply w-20 h-20 rounded-full bg-blue-700 text-white text-3xl font-bold flex items-center justify-center mx-auto mb-4;
+.profile-avatar {
+  @apply w-16 h-16 rounded-2xl bg-white text-blue-700 text-xl font-bold flex items-center justify-center flex-shrink-0;
 }
 
-.profile-header h1 {
-  @apply text-xl font-bold text-slate-800;
+.profile-identity {
+  @apply flex-1 min-w-0;
 }
 
-.profile-header p {
-  @apply text-slate-500 text-sm mt-1;
+.profile-identity h1 {
+  @apply text-xl font-bold truncate;
 }
 
-.profile-card {
-  @apply bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100 overflow-hidden;
+.profile-username {
+  @apply text-sm text-blue-100 mt-0.5;
 }
 
-.profile-item {
-  @apply flex items-center gap-4 p-4;
+.role-badge {
+  @apply inline-flex items-center gap-1.5 bg-white/15 text-blue-50 text-xs font-semibold px-2.5 py-1 rounded-lg mt-3;
 }
 
-.profile-item svg {
+.profile-bio {
+  @apply text-sm text-blue-100 leading-relaxed mt-3;
+}
+
+.edit-profile-btn {
+  @apply inline-flex items-center justify-center gap-1.5 bg-white text-blue-700 text-sm font-semibold px-3.5 py-2.5 rounded-xl hover:bg-blue-50 transition;
+}
+
+.profile-stats {
+  @apply grid grid-cols-3 gap-3;
+}
+
+.profile-stat {
+  @apply bg-white rounded-2xl border border-slate-100 p-3 sm:p-4 flex flex-col items-center text-center;
+}
+
+.profile-stat svg {
+  @apply text-blue-600 mb-1.5;
+}
+
+.profile-stat strong {
+  @apply text-lg font-bold text-slate-800;
+}
+
+.profile-stat span {
+  @apply text-xs text-slate-500 mt-0.5;
+}
+
+.profile-panel {
+  @apply bg-white rounded-2xl border border-slate-100 overflow-hidden;
+}
+
+.panel-heading {
+  @apply flex items-center justify-between p-5 border-b border-slate-100;
+}
+
+.panel-heading h2 {
+  @apply text-base font-bold text-slate-800 mt-0.5;
+}
+
+.panel-heading > svg {
   @apply text-blue-600;
 }
 
-.profile-item .label {
+.eyebrow {
+  @apply text-[10px] uppercase tracking-wider font-bold text-blue-600;
+}
+
+.about-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:gap-x-5;
+}
+
+.about-item {
+  @apply flex items-start gap-3 p-4 border-slate-100;
+}
+
+.about-item svg {
+  @apply text-blue-600 mt-0.5 flex-shrink-0;
+}
+
+.about-item span,
+.about-item strong {
+  @apply block;
+}
+
+.about-item span {
   @apply text-xs text-slate-500;
 }
 
-.profile-item p {
+.about-item strong {
+  @apply text-sm text-slate-800 mt-1 break-words;
+}
+
+.settings-panel {
+  @apply divide-y divide-slate-100;
+}
+
+.settings-panel .panel-heading {
+  @apply border-b-0;
+}
+
+.setting-row {
+  @apply w-full flex items-center gap-3 p-4 text-left text-slate-700 hover:bg-blue-50 transition;
+}
+
+.setting-row > svg:first-child {
+  @apply text-blue-600 flex-shrink-0;
+}
+
+.setting-row > svg:last-child {
+  @apply ml-auto text-slate-400 flex-shrink-0;
+}
+
+.setting-copy {
+  @apply flex flex-col;
+}
+
+.setting-copy strong {
   @apply text-sm font-medium text-slate-800;
 }
 
-.logout-btn {
-  @apply w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-medium py-3 rounded-2xl hover:bg-red-100 transition;
+.setting-copy small {
+  @apply text-xs text-slate-500 mt-0.5;
+}
+
+.logout-row {
+  @apply text-red-600;
+}
+
+.logout-row > svg:first-child {
+  @apply text-red-500;
+}
+
+.profile-notice {
+  @apply bg-blue-50 text-blue-700 rounded-xl px-4 py-3 text-sm;
+}
+
+.profile-empty {
+  @apply bg-white rounded-2xl border border-slate-100 p-10 text-center text-slate-500;
+}
+
+.profile-empty svg {
+  @apply text-blue-600 mx-auto mb-3;
+}
+
+.profile-empty h1 {
+  @apply text-lg font-bold text-slate-800;
+}
+
+.profile-empty p {
+  @apply text-sm mt-1;
+}
+
+.profile-modal-overlay {
+  @apply fixed inset-0 z-50 bg-slate-950/40 flex items-end sm:items-center justify-center p-4;
+}
+
+.profile-editor {
+  @apply bg-white w-full max-w-xl rounded-3xl p-5 sm:p-6 shadow-xl max-h-[90vh] overflow-y-auto;
+}
+
+.editor-heading {
+  @apply flex items-start justify-between mb-5;
+}
+
+.editor-heading h2 {
+  @apply text-lg font-bold text-slate-800 mt-0.5;
+}
+
+.editor-heading > button {
+  @apply w-9 h-9 rounded-xl text-slate-400 hover:bg-slate-100 flex items-center justify-center;
+}
+
+.editor-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+}
+
+.editor-grid label {
+  @apply text-sm font-medium text-slate-700;
+}
+
+.editor-grid input,
+.editor-grid textarea {
+  @apply block w-full mt-1.5 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.editor-grid input[readonly] {
+  @apply bg-slate-50 text-slate-500;
+}
+
+.editor-grid textarea {
+  @apply resize-none;
+}
+
+.wide-field {
+  @apply sm:col-span-2;
+}
+
+.save-profile-btn {
+  @apply w-full mt-5 flex items-center justify-center gap-2 bg-blue-700 text-white font-semibold py-3 rounded-xl hover:bg-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+@media (max-width: 420px) {
+  .profile-stats {
+    @apply gap-2;
+  }
+
+  .profile-stat {
+    @apply px-1.5;
+  }
+
+  .profile-stat span {
+    @apply text-[11px];
+  }
 }

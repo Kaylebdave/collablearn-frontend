@@ -82,6 +82,18 @@
   @apply text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg;
 }
 
+.pending-badge.failed {
+  @apply inline-flex items-center gap-1 text-red-700 bg-red-50;
+}
+
+.pending-badge.syncing {
+  @apply text-blue-700 bg-blue-50;
+}
+
+.sync-item-error {
+  @apply text-xs text-red-600 mt-1 break-words;
+}
+
 /* Empty */
 .empty-sync {
   @apply flex flex-col items-center justify-center py-14 text-slate-400 bg-white rounded-2xl border border-slate-100;

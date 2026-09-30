@@ -104,6 +104,14 @@
   @apply w-11 h-11 rounded-xl bg-blue-700 text-white flex items-center justify-center hover:bg-blue-800 transition;
 }
 
+.reply-input-row button:disabled {
+  @apply opacity-60 cursor-not-allowed;
+}
+
+.form-error {
+  @apply text-xs text-red-600 mt-2;
+}
+
 /* Not found */
 .not-found {
   @apply text-center py-20;

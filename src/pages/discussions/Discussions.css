@@ -21,6 +21,10 @@
   @apply flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition;
 }
 
+.status.downloaded {
+  @apply flex items-center gap-1 text-xs font-medium text-green-600;
+}
+
 /* Search */
 .search-bar {
   @apply flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-slate-400;
@@ -121,4 +125,14 @@
 
 .submit-btn {
   @apply w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl transition;
+}
+
+.field-error,
+.form-error {
+  @apply text-xs text-red-600 mt-1;
+}
+
+.form-group input[aria-invalid="true"],
+.form-group textarea[aria-invalid="true"] {
+  @apply border-red-400;
 }

@@ -17,6 +17,7 @@ import GroupDetail from './pages/GroupDetail'
 import Profile from './pages/profile'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import VerifyOtp from './pages/VerifyOtp'
 import Welcome from './pages/Welcome'
 import SyncQueue from './pages/SyncQueue'
 import ConflictResolution from './pages/ConflictResolution'
@@ -27,14 +28,16 @@ function App() {
   const [showSplash, setShowSplash] = useState(true)
   const { isOnline, setOnline, setOffline } = useConnectivityStore()
   const { isAuthenticated, justSignedUp, checkAuth } = useAuthStore()
-  const syncAll = useSyncStore((state) => state.syncAll)
+  const syncNow = useSyncStore((state) => state.syncNow)
+  const restoreQueuedItems = useSyncStore((state) => state.restoreQueuedItems)
   const location = useLocation()
 
   const hideLayout =
-    ['/login', '/signup', '/welcome'].includes(location.pathname) || justSignedUp
+    ['/login', '/signup', '/verify-otp', '/welcome'].includes(location.pathname) || justSignedUp
 
   useEffect(() => {
     checkAuth()
+    restoreQueuedItems()
 
     const timer = setTimeout(() => {
       setShowSplash(false)
@@ -42,10 +45,7 @@ function App() {
 
     const handleOnline = () => {
       setOnline()
-      // Auto-sync when connection returns
-      setTimeout(() => {
-        syncAll()
-      }, 1000)
+      syncNow()
     }
 
     const handleOffline = () => setOffline()
@@ -53,12 +53,23 @@ function App() {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
+    if (navigator.onLine) {
+      setOnline()
+      syncNow()
+    } else {
+      setOffline()
+    }
+
     return () => {
       clearTimeout(timer)
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
+  }, [checkAuth, restoreQueuedItems, setOffline, setOnline, syncNow])
+
+  useEffect(() => {
+    if (isOnline && isAuthenticated) syncNow()
+  }, [isOnline, isAuthenticated, syncNow])
 
   if (showSplash) {
     return <Splash />
@@ -88,6 +99,10 @@ function App() {
           <Route
             path="/signup"
             element={isAuthenticated ? <Navigate to="/" /> : <Signup />}
+          />
+          <Route
+            path="/verify-otp"
+            element={isAuthenticated ? <Navigate to="/welcome" /> : <VerifyOtp />}
           />
           <Route
             path="/welcome"

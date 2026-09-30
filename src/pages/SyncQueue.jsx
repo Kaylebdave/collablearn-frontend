@@ -1,10 +1,11 @@
-import { RefreshCw, Clock, CheckCircle2, MessageSquare, Users, BookOpen } from 'lucide-react'
+import { RefreshCw, Clock, CheckCircle2, MessageSquare, Users, BookOpen, Reply, AlertCircle } from 'lucide-react'
 import useSyncStore from '../stores/useSyncStore'
 import useConnectivityStore from '../stores/useConnectivityStore'
 import './SyncQueue.css'
 
 function SyncQueue() {
   const isOnline = useConnectivityStore((state) => state.isOnline)
+  useSyncStore((state) => state.queue)
   const { getPendingItems, syncAll, isSyncing, lastSynced } = useSyncStore()
   const pendingItems = getPendingItems()
 
@@ -57,11 +58,13 @@ function SyncQueue() {
         ) : (
           <div className="pending-list">
             {pendingItems.map((item) => (
-              <div key={`${item.type}-${item.id}`} className="pending-item">
+              <div key={item.id} className={`pending-item ${item.status}`}>
                 <div className="pending-icon">
-                  {item.type === 'Discussion' ? (
+                  {item.label === 'Discussion' ? (
                     <MessageSquare size={18} />
-                  ) : item.type === 'Study Group' ? (
+                  ) : item.label === 'Reply' ? (
+                    <Reply size={18} />
+                  ) : item.label === 'Study Group' ? (
                     <Users size={18} />
                   ) : (
                     <BookOpen size={18} />
@@ -69,9 +72,12 @@ function SyncQueue() {
                 </div>
                 <div className="pending-info">
                   <h4>{item.title}</h4>
-                  <p>{item.type} • Waiting to sync</p>
+                  <p>{item.label} · {item.status === 'syncing' ? 'Syncing now' : item.status === 'failed' ? 'Retry available' : 'Waiting to sync'}</p>
+                  {item.error && <p className="sync-item-error">{item.error}</p>}
                 </div>
-                <span className="pending-badge">Pending</span>
+                <span className={`pending-badge ${item.status}`}>
+                  {item.status === 'failed' ? <><AlertCircle size={13} /> Failed</> : item.status === 'syncing' ? 'Syncing' : 'Pending'}
+                </span>
               </div>
             ))}
           </div>
