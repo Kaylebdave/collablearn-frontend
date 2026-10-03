@@ -8,6 +8,7 @@ function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const setAuthenticatedUser = useAuthStore((state) => state.setAuthenticatedUser)
   const navigate = useNavigate()
@@ -21,6 +22,7 @@ function Login() {
     }
 
     setError('')
+    setIsSubmitting(true)
     try {
       const data = await login({ email, password })
       setAuthenticatedUser(data?.user || { ...data, email })
@@ -31,6 +33,8 @@ function Login() {
       } else {
         setError(requestError.response.data?.message || requestError.response.data?.error || 'Invalid email or password.')
       }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -81,9 +85,14 @@ function Login() {
                 <a href="#" className="forgot">Forgot password?</a>
               </div>
 
-              <button type="submit" className="auth-button">
-                Login
+              <button type="submit" className="auth-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Logging in...' : 'Login'}
               </button>
+              {isSubmitting && (
+                <p className="text-sm text-slate-500 mt-3" role="status">
+                  Waking server... first request may take 1-2 minutes
+                </p>
+              )}
             </form>
 
             <p className="auth-footer">

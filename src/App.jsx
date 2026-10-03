@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import useConnectivityStore from './stores/useConnectivityStore'
 import useAuthStore from './stores/useAuthStore'
 import useSyncStore from './stores/useSyncStore'
+import api from './api/axios'
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import Splash from './components/Splash'
@@ -34,6 +35,10 @@ function App() {
 
   const hideLayout =
     ['/login', '/signup', '/verify-otp', '/welcome'].includes(location.pathname) || justSignedUp
+
+  useEffect(() => {
+    void api.get('/health').catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     checkAuth()

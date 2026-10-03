@@ -121,7 +121,7 @@ function Signup() {
               </button>
               {isSubmitting && (
                 <p className="text-sm text-slate-500 mt-3" role="status">
-                  Connecting to server... this may take up to 2 minutes on first request
+                  Waking server... first request may take 1-2 minutes
                 </p>
               )}
             </form>
