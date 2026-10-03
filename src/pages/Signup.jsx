@@ -28,18 +28,14 @@ function Signup() {
 
     setError('')
     try {
-      await signup({ name, email, password, role })
+      await signup({ name, email, password, role: role === 'tutor' ? 'tutor' : 'student' })
       navigate('/verify-otp', { state: { email, name, role } })
     } catch (requestError) {
-      if (!requestError.response) {
-        setError('Unable to reach CollabLearn. Check your connection and try again.')
-      } else {
-        const responseData = requestError.response.data
-        const apiMessage = typeof responseData === 'string'
-          ? responseData
-          : responseData?.message || responseData?.error
-        setError(apiMessage || 'Unable to create your account. Please try again.')
-      }
+      setError(
+        requestError.response?.data?.message ||
+        requestError.response?.data?.error ||
+        'Unable to reach CollabLearn. Check your connection and try again.'
+      )
     }
   }
 
