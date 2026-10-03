@@ -10,6 +10,7 @@ function Signup() {
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('student')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const navigate = useNavigate()
 
@@ -27,6 +28,7 @@ function Signup() {
     }
 
     setError('')
+    setIsSubmitting(true)
     try {
       await signup({ name, email, password, role: role === 'tutor' ? 'tutor' : 'student' })
       navigate('/verify-otp', { state: { email, name, role } })
@@ -34,8 +36,10 @@ function Signup() {
       setError(
         requestError.response?.data?.message ||
         requestError.response?.data?.error ||
-        'Unable to reach CollabLearn. Check your connection and try again.'
+        'The server is taking longer than expected to respond. Please try again.'
       )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -112,9 +116,14 @@ function Signup() {
                 />
               </div>
 
-              <button type="submit" className="auth-button">
-                Create Account
+              <button type="submit" className="auth-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating account...' : 'Create Account'}
               </button>
+              {isSubmitting && (
+                <p className="text-sm text-slate-500 mt-3" role="status">
+                  Connecting to server... this may take up to 2 minutes on first request
+                </p>
+              )}
             </form>
 
             <p className="auth-footer">
