@@ -28,7 +28,7 @@ import './App.css'
 function App() {
   const [showSplash, setShowSplash] = useState(true)
   const { isOnline, setOnline, setOffline } = useConnectivityStore()
-  const { isAuthenticated, justSignedUp, checkAuth } = useAuthStore()
+  const { isAuthenticated, justSignedUp, user, checkAuth } = useAuthStore()
   const syncNow = useSyncStore((state) => state.syncNow)
   const restoreQueuedItems = useSyncStore((state) => state.restoreQueuedItems)
   const location = useLocation()
@@ -80,11 +80,6 @@ function App() {
     return <Splash />
   }
 
-  // Force Welcome screen after signup
-  if (isAuthenticated && justSignedUp) {
-    return <Welcome />
-  }
-
   return (
     <div className="app">
       {!isOnline && !hideLayout && (
@@ -115,7 +110,15 @@ function App() {
           />
           <Route
             path="/"
-            element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
+            element={isAuthenticated
+              ? user?.onboardingComplete === false ? <Navigate to="/welcome" replace /> : <Navigate to="/home" replace />
+              : <Navigate to="/login" />}
+          />
+          <Route
+            path="/home"
+            element={isAuthenticated
+              ? user?.onboardingComplete === false ? <Navigate to="/welcome" replace /> : <Home />
+              : <Navigate to="/login" />}
           />
           <Route
             path="/courses"

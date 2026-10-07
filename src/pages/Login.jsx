@@ -27,8 +27,8 @@ function Login() {
       const data = await login({ email, password })
       const user = data?.user || data?.data?.user || { ...data, email }
       const token = data?.token ?? data?.accessToken ?? data?.data?.token ?? data?.data?.accessToken
-      setAuthenticatedUser(user, true, token)
-      navigate('/welcome')
+      setAuthenticatedUser(user, false, token)
+      navigate('/home')
     } catch (requestError) {
       if (!requestError.response) {
         setError('Unable to reach CollabLearn. Check your connection and try again.')

@@ -1,32 +1,37 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { BookOpen, MessageSquare, Users, WifiOff } from 'lucide-react'
 import useAuthStore from '../stores/useAuthStore'
 import './Welcome.css'
 
 function Welcome() {
   const user = useAuthStore((state) => state.user)
-  const clearJustSignedUp = useAuthStore((state) => state.clearJustSignedUp)
+  const completeOnboarding = useAuthStore((state) => state.completeOnboarding)
   const isTutor = user?.role === 'tutor'
-  const navigate = useNavigate()
-
-  const handleGetStarted = (event) => {
-    event.preventDefault()
-    clearJustSignedUp()          // Important: clear the flag first
-    navigate(isTutor ? '/courses?action=create' : '/courses?view=browse')
-  }
+  const firstName = user?.name?.split(' ')[0] || (isTutor ? 'Tutor' : 'Student')
+  const coursePath = isTutor ? '/courses?action=create' : '/courses?view=browse'
 
   return (
     <div className="welcome-page">
-      <div className="welcome-card">
-        {/* Top Section */}
-        <div className="welcome-top">
-          <div className="welcome-logo">O</div>
-          <h1>Welcome, {user?.name?.split(' ')[0] || 'Student'}!</h1>
-          <p>{isTutor ? 'Your classroom is ready. Create a course to bring your learners together.' : 'Your learning space is ready. Join a course to get started.'}</p>
-        </div>
+      <main className="welcome-card">
+        <section className="welcome-intro">
+          <div className="welcome-brand"><div className="welcome-logo">O</div><span>CollabLearn</span></div>
+          <span className="welcome-kicker">{isTutor ? 'TUTOR ONBOARDING' : 'STUDENT ONBOARDING'}</span>
+          <h1>Welcome, {firstName}.</h1>
+          <p>{isTutor ? 'Your classroom starts with a course. Set up your first one and invite learners into a shared space.' : 'Your learning space is ready. Find your course and bring your class materials, discussions, and study groups together.'}</p>
+          <div className="welcome-actions">
+            <Link className="welcome-btn" to={coursePath} onClick={completeOnboarding}>
+              {isTutor ? 'Create Course' : 'Browse Courses'}
+            </Link>
+            <Link className="welcome-home-btn" to="/home" onClick={completeOnboarding}>Go to Home</Link>
+          </div>
+        </section>
 
-        {/* Features */}
-        <div className="welcome-features">
+        <section className="welcome-content" aria-label="Classroom tools">
+          <div className="welcome-content-heading">
+            <span>YOUR CLASSROOM</span>
+            <h2>Everything for learning together</h2>
+          </div>
+          <div className="welcome-features">
           <div className="feature">
             <div className="feature-icon blue">
               <BookOpen size={20} />
@@ -66,13 +71,10 @@ function Welcome() {
               <p>Your offline work syncs when you are back online</p>
             </div>
           </div>
-        </div>
-
-        {/* Button */}
-        <Link className="welcome-btn" to={isTutor ? '/courses?action=create' : '/courses?view=browse'} onClick={handleGetStarted}>
-          {isTutor ? 'Create Course' : 'Browse Courses'}
-        </Link>
-      </div>
+          </div>
+          <p className="welcome-note">Your courses and conversations stay organized in one place.</p>
+        </section>
+      </main>
     </div>
   )
 }

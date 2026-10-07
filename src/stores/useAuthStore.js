@@ -30,7 +30,8 @@ const useAuthStore = create((set, get) => ({
       bio: userData.bio || '',
       department: userData.department || '',
       level: userData.level || '',
-      institution: userData.institution || ''
+      institution: userData.institution || '',
+      onboardingComplete: justSignedUp ? false : true
     }
     const previousUser = get().user
     const isDifferentUser = previousUser && String(getUserKey(previousUser)) !== String(getUserKey(user))
@@ -80,6 +81,13 @@ const useAuthStore = create((set, get) => ({
 
   clearJustSignedUp: () => set({ justSignedUp: false }),
 
+  completeOnboarding: () => set((state) => {
+    if (!state.user) return { justSignedUp: false }
+    const user = { ...state.user, onboardingComplete: true }
+    localStorage.setItem('collablearn_user', JSON.stringify(user))
+    return { user, justSignedUp: false }
+  }),
+
   checkAuth: () => {
     const savedUser = localStorage.getItem('collablearn_user')
     if (savedUser) {
@@ -90,7 +98,7 @@ const useAuthStore = create((set, get) => ({
         user,
         token,
         isAuthenticated: true,
-        justSignedUp: false
+        justSignedUp: user.onboardingComplete === false
       })
     } else {
       localStorage.removeItem('collablearn_token')
