@@ -3,7 +3,11 @@ import api from './axios'
 const request = (method, url, data) =>
   api({ method, url, data }).then((response) => response.data)
 
-export const getDiscussions = () => request('get', '/discussions')
+export const getDiscussions = ({ courseId, userId } = {}) =>
+  api.get('/discussions', {
+    params: { ...(courseId == null ? {} : { courseId }), ...(userId == null ? {} : { userId }) },
+    headers: userId == null ? undefined : { 'X-User-Id': userId }
+  }).then((response) => response.data)
 
 export const getDiscussionById = (id) => request('get', `/discussions/${id}`)
 

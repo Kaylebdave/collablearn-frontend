@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, CheckCircle2, Download, FileText, MessageSquare, Upload, Users } from 'lucide-react'
 import { getCourseById, uploadCourseMaterial } from '../api/courses'
+import { getDiscussions } from '../api/discussions'
 import useAuthStore from '../stores/useAuthStore'
 import useConnectivityStore from '../stores/useConnectivityStore'
 import useCourseStore from '../stores/useCourseStore'
@@ -10,6 +11,12 @@ import useGroupStore from '../stores/useGroupStore'
 import './CourseDetail.css'
 
 const getCourseFromResponse = (response) => response?.course || response?.data?.course || response?.data || response
+const getDiscussionList = (response) => {
+  const posts = Array.isArray(response)
+    ? response
+    : response?.discussions || response?.data?.discussions || response?.data
+  return Array.isArray(posts) ? posts : null
+}
 
 const getErrorMessage = (requestError, fallback) => {
   const responseData = requestError?.response?.data
@@ -19,6 +26,7 @@ const getErrorMessage = (requestError, fallback) => {
 
 const displayText = (value, fallback) =>
   typeof value === 'string' || typeof value === 'number' ? String(value) : fallback
+const allowedMaterialExtensions = new Set(['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'ppt', 'pptx'])
 
 function CourseDetail() {
   const { id } = useParams()
@@ -36,8 +44,12 @@ function CourseDetail() {
   const [uploadError, setUploadError] = useState('')
   const [title, setTitle] = useState('')
   const [file, setFile] = useState(null)
+  const fileInputRef = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [courseDiscussionPosts, setCourseDiscussionPosts] = useState(null)
+  const [discussionLoading, setDiscussionLoading] = useState(false)
+  const [discussionError, setDiscussionError] = useState('')
 
   const loadCourse = async () => {
     if (!isOnline) {
@@ -62,7 +74,7 @@ function CourseDetail() {
         status: requestError?.response?.status,
         message: getErrorMessage(requestError, 'Request failed')
       })
-      setCourse(localCourse)
+      setCourse((currentCourse) => currentCourse || localCourse)
       setLoadError(getErrorMessage(requestError, 'Unable to load course details.'))
     } finally {
       setLoading(false)
@@ -83,7 +95,7 @@ function CourseDetail() {
       setCourse(localCourse)
 
       try {
-        const response = await getCourseById(id)
+        const response = await getCourseById(id, user.id)
         const fetchedCourse = getCourseFromResponse(response)
 
         if (!fetchedCourse || typeof fetchedCourse !== 'object') {
@@ -110,11 +122,42 @@ function CourseDetail() {
     }
   }, [id, isOnline, localCourse, user?.id])
 
+  useEffect(() => {
+    if (!isOnline || !user?.id) return undefined
+    let active = true
+    Promise.resolve().then(() => {
+      if (!active) return null
+      setDiscussionLoading(true)
+      setDiscussionError('')
+      return getDiscussions({ courseId: id, userId: user.id })
+        .then((response) => {
+          const posts = getDiscussionList(response)
+          if (!posts) throw new Error('Invalid discussions response')
+          if (active) setCourseDiscussionPosts(posts)
+        })
+        .catch((requestError) => {
+          if (!active) return
+          setCourseDiscussionPosts([])
+          setDiscussionError(getErrorMessage(requestError, 'Unable to load course discussions.'))
+        })
+        .finally(() => {
+          if (active) setDiscussionLoading(false)
+        })
+    })
+    return () => { active = false }
+  }, [id, isOnline, user?.id])
+
   const handleUpload = async (event) => {
     event.preventDefault()
 
     if (!title.trim() || !file) {
       setUploadError('Enter a material title and choose a file.')
+      return
+    }
+
+    const extension = file.name.split('.').pop()?.toLowerCase()
+    if (!allowedMaterialExtensions.has(extension)) {
+      setUploadError('Choose a PDF, PNG, JPG, JPEG, DOC, DOCX, PPT, or PPTX file.')
       return
     }
 
@@ -129,7 +172,7 @@ function CourseDetail() {
       await loadCourse()
       setTitle('')
       setFile(null)
-      event.currentTarget.reset()
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (uploadError) {
       setUploadError(getErrorMessage(uploadError, 'Unable to upload material.'))
     } finally {
@@ -169,7 +212,13 @@ function CourseDetail() {
     return (linkedCourseId != null && String(linkedCourseId) === String(id)) ||
       (linkedCourse && [displayedCourse.code, displayedCourse.title].some((value) => value && String(value).toLowerCase() === String(linkedCourse).toLowerCase()))
   }
-  const courseDiscussions = discussions.filter(courseMatches)
+  const courseDiscussions = courseDiscussionPosts
+    ? courseDiscussionPosts.filter((post) => {
+        const linkedCourseId = post.courseId ?? post.course?.id ?? post.course?._id
+        const linkedCourse = typeof post.course === 'string' ? post.course : post.course?.code ?? post.course?.title
+        return (linkedCourseId == null && !linkedCourse) || courseMatches(post)
+      })
+    : discussions.filter(courseMatches)
   const courseGroups = groups.filter(courseMatches)
   const tabItems = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
@@ -214,7 +263,7 @@ function CourseDetail() {
 
       {activeTab === 'materials' && <section className="detail-section">
         <div className="section-header"><h3>Materials</h3><span className="material-count">{materials.length}</span></div>
-        {user?.role === 'tutor' && <div className="upload-section"><h3>Upload material</h3>{uploadError && <p className="form-error">{uploadError}</p>}<form className="upload-form" onSubmit={handleUpload}><label htmlFor="material-title">Title</label><input id="material-title" value={title} onChange={(event) => setTitle(event.target.value)} disabled={uploading} required /><label htmlFor="material-file">File</label><input id="material-file" type="file" onChange={(event) => setFile(event.target.files?.[0] || null)} disabled={uploading} required /><button className="upload-submit" type="submit" disabled={uploading}><Upload size={16} />{uploading ? 'Uploading...' : 'Upload material'}</button></form></div>}
+        {user?.role === 'tutor' && <div className="upload-section"><h3>Upload material</h3>{uploadError && <p className="form-error" role="alert">{uploadError}</p>}<form className="upload-form" onSubmit={handleUpload}><label htmlFor="material-title">Title</label><input id="material-title" value={title} onChange={(event) => setTitle(event.target.value)} disabled={uploading} required /><label htmlFor="material-file">File</label><input ref={fileInputRef} id="material-file" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.ppt,.pptx" onChange={(event) => setFile(event.target.files?.[0] || null)} disabled={uploading} required /><button className="upload-submit" type="submit" disabled={uploading}><Upload size={16} />{uploading ? 'Uploading...' : 'Upload material'}</button></form></div>}
         {materials.length === 0 ? <div className="materials-empty">No materials available yet.</div> : <div className="materials-list">{materials.map((material) => {
           if (!material || typeof material !== 'object') return null
           const materialTitle = displayText(material.title, 'Untitled material')
@@ -224,7 +273,7 @@ function CourseDetail() {
         })}</div>}
       </section>}
 
-      {activeTab === 'discussion' && <section className="detail-section"><div className="section-header"><h3>Course discussion</h3><span className="material-count">{courseDiscussions.length}</span></div>{courseDiscussions.length ? <div className="course-related-list">{courseDiscussions.map((post) => <Link to={`/discussions/${post.id ?? post._id}`} className="course-related-item" key={post.id ?? post._id}><MessageSquare size={18} /><div><strong>{post.title || 'Discussion thread'}</strong><span>{post.author?.name || post.authorName || (typeof post.author === 'string' ? post.author : 'Author not provided')} · {post.replies?.length || 0} replies</span></div></Link>)}</div> : <div className="materials-empty">No discussions for this course yet.</div>}</section>}
+      {activeTab === 'discussion' && <section className="detail-section"><div className="section-header"><h3>Course discussion</h3><span className="material-count">{courseDiscussions.length}</span></div>{discussionError && <div className="course-message error" role="alert">{discussionError}</div>}{discussionLoading ? <div className="materials-empty" role="status">Loading course discussions...</div> : courseDiscussions.length ? <div className="course-related-list">{courseDiscussions.map((post) => <Link to={`/discussions/${post.id ?? post._id}`} className="course-related-item" key={post.id ?? post._id}><MessageSquare size={18} /><div><strong>{post.title || 'Discussion thread'}</strong><span>{post.author?.name || post.authorName || (typeof post.author === 'string' ? post.author : 'Author not provided')} · {post.replies?.length || 0} replies</span></div></Link>)}</div> : <div className="materials-empty">No discussions for this course yet.</div>}</section>}
 
       {activeTab === 'people' && <section className="detail-section"><div className="section-header"><h3>{user?.role === 'tutor' ? 'Students in this course' : 'Classmates'}</h3><span className="material-count">{Array.isArray(people) ? people.length : 0}</span></div><div className="course-people-list"><div className="course-person tutor-person"><div className="person-avatar">{tutorName.slice(0, 1).toUpperCase()}</div><div><strong>{tutorName}</strong><span>Course tutor</span></div></div>{Array.isArray(people) && people.filter((person) => person && (typeof person === 'object' || typeof person === 'string')).map((person, index) => { const name = typeof person === 'string' ? person : person.name || person.fullName; if (!name || name === tutorName) return null; return <div className="course-person" key={person.id ?? person._id ?? person.email ?? `${name}-${index}`}><div className="person-avatar">{name.slice(0, 1).toUpperCase()}</div><div><strong>{name}</strong><span>{person.role === 'tutor' ? 'Tutor' : 'Student'}</span></div></div> })}</div>{(!Array.isArray(people) || people.length === 0) && <div className="materials-empty">No student roster is available for this course yet.</div>}</section>}
 
