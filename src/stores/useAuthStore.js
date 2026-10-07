@@ -1,11 +1,26 @@
 import { create } from 'zustand'
+import useCourseStore from './useCourseStore'
+import useDiscussionStore from './useDiscussionStore'
+import useGroupStore from './useGroupStore'
+import useSyncStore from './useSyncStore'
+import { setSyncQueueUser } from '../utils/syncQueueStorage'
 
-const useAuthStore = create((set) => ({
+const getUserKey = (user) => user?.id ?? user?.userId ?? user?.email
+
+const clearUserData = () => {
+  useCourseStore.getState().resetCourses()
+  useDiscussionStore.getState().clearUserData()
+  useGroupStore.getState().resetGroups()
+  useSyncStore.getState().clearQueue()
+}
+
+const useAuthStore = create((set, get) => ({
   user: null,
+  token: null,
   isAuthenticated: false,
   justSignedUp: false,
 
-  setAuthenticatedUser: (userData, justSignedUp = false) => {
+  setAuthenticatedUser: (userData, justSignedUp = false, authToken) => {
     const user = {
       id: userData.id || userData.userId || Date.now(),
       name: userData.name || userData.fullName || 'Student',
@@ -17,8 +32,16 @@ const useAuthStore = create((set) => ({
       level: userData.level || '',
       institution: userData.institution || ''
     }
-    set({ user, isAuthenticated: true, justSignedUp })
+    const previousUser = get().user
+    const isDifferentUser = previousUser && String(getUserKey(previousUser)) !== String(getUserKey(user))
+    if (isDifferentUser) clearUserData()
+
+    const token = authToken ?? userData.token ?? userData.accessToken ?? (isDifferentUser ? null : get().token)
+    setSyncQueueUser(getUserKey(user))
+    set({ user, token, isAuthenticated: true, justSignedUp })
     localStorage.setItem('collablearn_user', JSON.stringify(user))
+    if (token) localStorage.setItem('collablearn_token', token)
+    else localStorage.removeItem('collablearn_token')
   },
 
   updateUser: (userData) => set((state) => {
@@ -28,18 +51,12 @@ const useAuthStore = create((set) => ({
   }),
 
   signup: (userData) => {
-    const newUser = {
-      id: Date.now(),
+    get().setAuthenticatedUser({
+      id: userData.id || Date.now(),
       name: userData.name,
       email: userData.email,
       role: userData.role || 'student'   // student or tutor
-    }
-    set({
-      user: newUser,
-      isAuthenticated: true,
-      justSignedUp: true
-    })
-    localStorage.setItem('collablearn_user', JSON.stringify(newUser))
+    }, true, userData.token ?? userData.accessToken)
   },
 
   login: (email) => {
@@ -47,7 +64,7 @@ const useAuthStore = create((set) => ({
     if (savedUser) {
       const user = JSON.parse(savedUser)
       if (user.email === email) {
-        set({ user, isAuthenticated: true, justSignedUp: false })
+        get().setAuthenticatedUser(user, false, localStorage.getItem('collablearn_token'))
         return true
       }
     }
@@ -55,8 +72,10 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    set({ user: null, isAuthenticated: false, justSignedUp: false })
+    clearUserData()
+    set({ user: null, token: null, isAuthenticated: false, justSignedUp: false })
     localStorage.removeItem('collablearn_user')
+    localStorage.removeItem('collablearn_token')
   },
 
   clearJustSignedUp: () => set({ justSignedUp: false }),
@@ -64,11 +83,17 @@ const useAuthStore = create((set) => ({
   checkAuth: () => {
     const savedUser = localStorage.getItem('collablearn_user')
     if (savedUser) {
+      const user = JSON.parse(savedUser)
+      const token = localStorage.getItem('collablearn_token')
+      setSyncQueueUser(getUserKey(user))
       set({
-        user: JSON.parse(savedUser),
+        user,
+        token,
         isAuthenticated: true,
         justSignedUp: false
       })
+    } else {
+      localStorage.removeItem('collablearn_token')
     }
   }
 }))

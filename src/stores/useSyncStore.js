@@ -3,7 +3,9 @@ import { getRecordId, isNetworkFailure, sendSyncItem } from '../services/syncEng
 import useCourseStore from './useCourseStore'
 import useDiscussionStore from './useDiscussionStore'
 import useGroupStore from './useGroupStore'
-import { enqueueSyncItem, readSyncQueue, removeSyncItem, updateSyncItem, writeSyncQueue } from '../utils/syncQueueStorage'
+import { clearSyncQueue, enqueueSyncItem, readSyncQueue, removeSyncItem, updateSyncItem, writeSyncQueue } from '../utils/syncQueueStorage'
+
+let syncRunId = 0
 
 const replaceDiscussionIdInReplyQueue = (localDiscussionId, serverDiscussionId) => {
   const queue = readSyncQueue().map((item) =>
@@ -110,6 +112,11 @@ const useSyncStore = create((set, get) => ({
   queue: readSyncQueue(),
 
   refreshQueue: () => set({ queue: readSyncQueue() }),
+  clearQueue: () => {
+    syncRunId += 1
+    clearSyncQueue()
+    set({ queue: [], isSyncing: false, lastSynced: null })
+  },
   restoreQueuedItems: () => readSyncQueue()
     .filter((item) => ['pending', 'failed', 'syncing'].includes(item.status))
     .forEach(restoreQueuedItem),
@@ -135,6 +142,7 @@ const useSyncStore = create((set, get) => ({
 
   syncNow: async () => {
     if (get().isSyncing || (typeof navigator !== 'undefined' && !navigator.onLine)) return
+    const currentRunId = ++syncRunId
     set({ isSyncing: true })
     try {
       const queuedItems = readSyncQueue()
@@ -142,6 +150,7 @@ const useSyncStore = create((set, get) => ({
         .sort((first, second) => new Date(first.createdAt) - new Date(second.createdAt))
 
       for (const queuedItem of queuedItems) {
+        if (currentRunId !== syncRunId) break
         const item = readSyncQueue().find((candidate) => candidate.id === queuedItem.id)
         if (!item || !['pending', 'failed', 'syncing'].includes(item.status)) continue
 
@@ -153,6 +162,7 @@ const useSyncStore = create((set, get) => ({
         try {
           result = await sendSyncItem(item)
         } catch (error) {
+          if (currentRunId !== syncRunId) break
           console.error('Sync failed', {
             type: item.type,
             localId: item.payload.localId,
@@ -172,6 +182,7 @@ const useSyncStore = create((set, get) => ({
           continue
         }
 
+        if (currentRunId !== syncRunId) break
         try {
           applySyncResult(item, result.record || {}, result.replies)
         } catch (error) {
@@ -189,9 +200,9 @@ const useSyncStore = create((set, get) => ({
         updateEntityStatus(item, 'synced')
         set({ queue: readSyncQueue() })
       }
-      set({ lastSynced: new Date().toLocaleTimeString() })
+      if (currentRunId === syncRunId) set({ lastSynced: new Date().toLocaleTimeString() })
     } finally {
-      set({ isSyncing: false, queue: readSyncQueue() })
+      if (currentRunId === syncRunId) set({ isSyncing: false, queue: readSyncQueue() })
     }
   },
 

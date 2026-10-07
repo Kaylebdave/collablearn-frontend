@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { BookOpen, MessageSquare, Users, WifiOff } from 'lucide-react'
 import useAuthStore from '../stores/useAuthStore'
 import './Welcome.css'
@@ -6,13 +6,13 @@ import './Welcome.css'
 function Welcome() {
   const user = useAuthStore((state) => state.user)
   const clearJustSignedUp = useAuthStore((state) => state.clearJustSignedUp)
+  const isTutor = user?.role === 'tutor'
   const navigate = useNavigate()
 
-  const handleGetStarted = () => {
+  const handleGetStarted = (event) => {
+    event.preventDefault()
     clearJustSignedUp()          // Important: clear the flag first
-    setTimeout(() => {
-      navigate('/')              // Then go to Home
-    }, 50)
+    navigate(isTutor ? '/courses?action=create' : '/courses?view=browse')
   }
 
   return (
@@ -22,10 +22,7 @@ function Welcome() {
         <div className="welcome-top">
           <div className="welcome-logo">O</div>
           <h1>Welcome, {user?.name?.split(' ')[0] || 'Student'}!</h1>
-          <p>
-            Your account has been created successfully.  
-            Start learning and collaborating with your classmates — even without internet.
-          </p>
+          <p>{isTutor ? 'Your classroom is ready. Create a course to bring your learners together.' : 'Your learning space is ready. Join a course to get started.'}</p>
         </div>
 
         {/* Features */}
@@ -72,9 +69,9 @@ function Welcome() {
         </div>
 
         {/* Button */}
-        <button className="welcome-btn" onClick={handleGetStarted}>
-          Get Started
-        </button>
+        <Link className="welcome-btn" to={isTutor ? '/courses?action=create' : '/courses?view=browse'} onClick={handleGetStarted}>
+          {isTutor ? 'Create Course' : 'Browse Courses'}
+        </Link>
       </div>
     </div>
   )

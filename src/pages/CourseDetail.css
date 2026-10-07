@@ -51,6 +51,130 @@
   @apply text-sm opacity-90 mt-1;
 }
 
+.enrolled-badge {
+  @apply ml-auto inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold whitespace-nowrap;
+}
+
+.course-detail-tabs {
+  @apply flex gap-1 overflow-x-auto border-b border-slate-200;
+  scrollbar-width: thin;
+}
+
+.course-detail-tabs button {
+  @apply flex flex-shrink-0 items-center gap-2 border-b-2 border-transparent px-3 py-3 text-sm font-medium text-slate-500 transition;
+}
+
+.course-detail-tabs button.active {
+  @apply border-blue-700 text-blue-700;
+}
+
+.overview-panel {
+  @apply space-y-5;
+}
+
+.overview-panel > div:first-child {
+  @apply rounded-2xl border border-slate-100 bg-white p-5;
+}
+
+.detail-eyebrow {
+  @apply block text-xs font-semibold uppercase tracking-wide text-blue-600;
+}
+
+.overview-panel > div:first-child h3 {
+  @apply mt-1;
+}
+
+.overview-panel > div:first-child p {
+  @apply text-sm leading-6 text-slate-600;
+}
+
+.tutor-info-card {
+  @apply flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4;
+}
+
+.tutor-avatar,
+.person-avatar {
+  @apply flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-base font-semibold text-blue-700;
+}
+
+.tutor-info-card strong,
+.tutor-info-card small {
+  @apply block;
+}
+
+.tutor-info-card strong {
+  @apply mt-0.5 text-sm text-slate-800;
+}
+
+.tutor-info-card small {
+  @apply mt-0.5 text-xs text-slate-500;
+}
+
+.tutor-role {
+  @apply ml-auto rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700;
+}
+
+.manage-course-btn {
+  @apply inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800;
+}
+
+.course-related-list,
+.course-people-list {
+  @apply space-y-2;
+}
+
+.course-related-item,
+.course-person {
+  @apply flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 no-underline;
+}
+
+.course-related-item > svg {
+  @apply flex-shrink-0 text-blue-600;
+}
+
+.course-related-item strong,
+.course-related-item span,
+.course-person strong,
+.course-person span {
+  @apply block;
+}
+
+.course-related-item strong,
+.course-person strong {
+  @apply text-sm font-semibold text-slate-800;
+}
+
+.course-related-item span,
+.course-person span {
+  @apply mt-1 text-xs text-slate-500;
+}
+
+.course-person {
+  @apply min-h-18;
+}
+
+.tutor-person {
+  @apply border-blue-100 bg-blue-50/60;
+}
+
+.upload-section {
+  @apply mb-4;
+}
+
+@media (max-width: 640px) {
+  .course-hero {
+    @apply flex-wrap;
+  }
+
+  .enrolled-badge {
+    @apply ml-0;
+  }
+
+  .course-detail-tabs button {
+    @apply px-2.5 text-xs;
+  }
+}
+
 /* Progress */
 .progress-card {
   @apply bg-white rounded-2xl border border-slate-100 p-4;

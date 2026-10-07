@@ -30,6 +30,18 @@
   @apply flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400;
 }
 
+.course-tabs {
+  @apply flex gap-1 border-b border-slate-200;
+}
+
+.course-tabs button {
+  @apply px-4 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent transition;
+}
+
+.course-tabs button.active {
+  @apply text-blue-700 border-blue-700;
+}
+
 .courses-message {
   @apply rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700;
 }
@@ -44,7 +56,29 @@
 }
 
 .course-item {
-  @apply bg-white rounded-2xl border border-slate-100 p-4 flex items-start gap-4 shadow-sm block no-underline text-inherit hover:border-blue-200 transition;
+  @apply bg-white rounded-2xl border border-slate-100 p-4 flex items-start gap-4 shadow-sm no-underline text-inherit hover:border-blue-200 transition;
+}
+
+.course-item > .course-details {
+  @apply self-center;
+}
+
+.open-course-btn,
+.join-course-btn {
+  @apply self-center flex-shrink-0 inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition;
+}
+
+.open-course-btn {
+  @apply bg-blue-50 text-blue-700 hover:bg-blue-100;
+}
+
+.join-course-btn,
+.browse-empty-btn {
+  @apply bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-60 disabled:cursor-wait;
+}
+
+.browse-empty-btn {
+  @apply mt-4 rounded-xl px-4 py-2.5 text-sm font-semibold transition;
 }
 
 .course-badge {
@@ -115,6 +149,25 @@
 
 .empty-state p {
   @apply mt-3 text-sm;
+}
+
+.empty-state .banner-btn {
+  @apply mt-4;
+}
+
+@media (max-width: 640px) {
+  .course-item {
+    @apply flex-wrap gap-3;
+  }
+
+  .course-item > .course-details {
+    @apply w-[calc(100%-3.75rem)] flex-none;
+  }
+
+  .open-course-btn,
+  .join-course-btn {
+    @apply ml-auto;
+  }
 }
 
 /* Modal */

@@ -6,16 +6,31 @@ import {
   Clock,
   Search,
   Bell,
+  ArrowRight,
   PlusCircle,
   BarChart3,
-  FileText,
   GraduationCap
 } from 'lucide-react'
 import useAuthStore from '../../stores/useAuthStore'
+import useCourseStore from '../../stores/useCourseStore'
+import useDiscussionStore from '../../stores/useDiscussionStore'
+import useSyncStore from '../../stores/useSyncStore'
 import './Home.css'
+
+const getCourseStudents = (course) => Array.isArray(course.students)
+  ? course.students.length
+  : Number(course.studentsCount ?? course.studentCount ?? course.enrollmentCount) || 0
+
+const getMaterialCount = (course) => Array.isArray(course.materials)
+  ? course.materials.length
+  : Number(course.materialsCount ?? course.materialCount ?? course.materials) || 0
 
 function TutorHome() {
   const user = useAuthStore((state) => state.user)
+  const courses = useCourseStore((state) => state.courses)
+  const discussions = useDiscussionStore((state) => state.posts)
+  const pendingCount = useSyncStore((state) => state.queue.filter((item) => item.status !== 'synced').length)
+  const studentCount = courses.reduce((total, course) => total + getCourseStudents(course), 0)
 
   return (
     <div className="home-page">
@@ -38,7 +53,7 @@ function TutorHome() {
             Manage your courses, track student engagement, and support learning — even offline.
           </p>
           <div className="banner-actions">
-            <Link to="/courses" className="banner-btn primary">
+            <Link to="/courses?action=create" className="banner-btn primary">
               <PlusCircle size={18} />
               Create Course
             </Link>
@@ -62,7 +77,7 @@ function TutorHome() {
             <BookOpen size={18} />
           </div>
           <div>
-            <strong>3</strong>
+            <strong>{courses.length}</strong>
             <span>My Courses</span>
           </div>
         </Link>
@@ -71,7 +86,7 @@ function TutorHome() {
             <Users size={18} />
           </div>
           <div>
-            <strong>48</strong>
+            <strong>{studentCount}</strong>
             <span>Students</span>
           </div>
         </Link>
@@ -80,7 +95,7 @@ function TutorHome() {
             <MessageSquare size={18} />
           </div>
           <div>
-            <strong>15</strong>
+            <strong>{discussions.length}</strong>
             <span>Discussions</span>
           </div>
         </Link>
@@ -89,10 +104,24 @@ function TutorHome() {
             <Clock size={18} />
           </div>
           <div>
-            <strong>2</strong>
+            <strong>{pendingCount}</strong>
             <span>Pending Sync</span>
           </div>
         </Link>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>My Classes</h2>
+          <Link to="/courses" className="view-all">View all</Link>
+        </div>
+        {courses.length ? <div className="courses-grid">
+          {courses.map((course) => <Link to={`/courses/${course.id ?? course._id}`} className="course-card blue" key={course.id ?? course._id}>
+            <div className="course-top"><span className="course-code">{course.code || 'COURSE'}</span><h3>{course.title || course.name || 'Untitled course'}</h3></div>
+            <div className="course-meta"><span>{getCourseStudents(course)} students</span><span>{getMaterialCount(course)} materials</span></div>
+            <div className="course-progress"><span>Manage class</span><ArrowRight size={16} /></div>
+          </Link>)}
+        </div> : <div className="empty-state"><BookOpen size={34} /><p>Create your first course</p><Link to="/courses?action=create" className="banner-btn primary"><PlusCircle size={17} />Create Course</Link></div>}
       </section>
 
       {/* Quick Actions */}
@@ -101,7 +130,7 @@ function TutorHome() {
           <h2>Quick Actions</h2>
         </div>
         <div className="tutor-actions">
-          <Link to="/courses" className="tutor-action-card">
+          <Link to="/courses?action=create" className="tutor-action-card">
             <PlusCircle size={24} />
             <span>Create New Course</span>
           </Link>
@@ -126,33 +155,7 @@ function TutorHome() {
           <h2>Recent Activity</h2>
         </div>
         <div className="activity-card">
-          <div className="activity-row">
-            <div className="activity-icon blue">
-              <FileText size={16} />
-            </div>
-            <div className="activity-text">
-              <h4>New material uploaded to Database Systems</h4>
-              <p>1 hour ago</p>
-            </div>
-          </div>
-          <div className="activity-row">
-            <div className="activity-icon green">
-              <MessageSquare size={16} />
-            </div>
-            <div className="activity-text">
-              <h4>3 new replies in Operating Systems forum</h4>
-              <p>3 hours ago</p>
-            </div>
-          </div>
-          <div className="activity-row">
-            <div className="activity-icon violet">
-              <Users size={16} />
-            </div>
-            <div className="activity-text">
-              <h4>New students joined your course</h4>
-              <p>Yesterday</p>
-            </div>
-          </div>
+          <div className="activity-row"><div className="activity-text"><p>No recent activity.</p></div></div>
         </div>
       </section>
     </div>

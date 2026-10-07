@@ -35,6 +35,8 @@ const useDiscussionStore = create((set, get) => ({
   localReplies: [],
   posts: [],
 
+  clearUserData: () => set({ localReplies: [], posts: [] }),
+
   setPosts: (posts) => set((state) => {
     const normalizedPosts = posts.map((post) => ({ ...post, id: post.id ?? post._id }))
     const remoteIds = new Set(normalizedPosts.map((post) => String(post.id)))

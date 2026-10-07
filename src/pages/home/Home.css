@@ -185,6 +185,18 @@
   @apply text-xs text-slate-500 mt-0.5;
 }
 
+.home-page .empty-state {
+  @apply flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-10 text-center text-slate-500;
+}
+
+.home-page .empty-state > svg {
+  @apply text-blue-500;
+}
+
+.home-page .empty-state p {
+  @apply mt-3 text-sm font-medium text-slate-600;
+}
+
 /* ========== TUTOR STYLES ========== */
 
 .tutor-banner {

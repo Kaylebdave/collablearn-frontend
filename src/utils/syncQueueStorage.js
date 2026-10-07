@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'collablearn-sync-queue'
+const OWNER_KEY = 'collablearn-sync-queue-user'
 
 const notifyQueueChanged = () => {
   if (typeof window !== 'undefined') {
@@ -34,6 +35,28 @@ export const writeSyncQueue = (queue) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(queue))
   }
   notifyQueueChanged()
+}
+
+export const clearSyncQueue = () => {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(OWNER_KEY)
+  }
+  notifyQueueChanged()
+}
+
+export const setSyncQueueUser = (userId) => {
+  if (typeof localStorage === 'undefined' || userId == null) return
+
+  const nextOwner = String(userId)
+  const currentOwner = localStorage.getItem(OWNER_KEY)
+  if (currentOwner !== nextOwner) {
+    if (currentOwner || readSyncQueue().length > 0) {
+      localStorage.removeItem(STORAGE_KEY)
+      notifyQueueChanged()
+    }
+    localStorage.setItem(OWNER_KEY, nextOwner)
+  }
 }
 
 export const enqueueSyncItem = (type, payload, entityId) => {

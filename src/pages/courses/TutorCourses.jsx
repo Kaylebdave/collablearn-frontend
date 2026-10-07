@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { BookOpen, CheckCircle2, Clock, Plus, Search, Users } from 'lucide-react'
-import { getCourses } from '../../api/courses'
+import { getCreatedCourses } from '../../api/courses'
 import useAuthStore from '../../stores/useAuthStore'
 import useConnectivityStore from '../../stores/useConnectivityStore'
 import useCourseStore from '../../stores/useCourseStore'
@@ -14,8 +14,9 @@ const getCourseList = (response) => {
 }
 
 function TutorCourses() {
+  const [searchParams] = useSearchParams()
   const [search, setSearch] = useState('')
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState(() => searchParams.get('action') === 'create')
   const [code, setCode] = useState('')
   const [title, setTitle] = useState('')
   const [lecturer, setLecturer] = useState('')
@@ -41,7 +42,7 @@ function TutorCourses() {
       if (!isMounted) return null
       setLoading(true)
       setError('')
-      return getCourses()
+      return getCreatedCourses()
         .then((data) => {
           const remoteCourses = getCourseList(data)
           if (!remoteCourses) throw new Error('Invalid courses response')
@@ -83,7 +84,9 @@ function TutorCourses() {
     if (Object.keys(nextFieldErrors).length > 0) return
 
     const courseData = {
-      ...values
+      ...values,
+      tutorId: user?.id,
+      tutorName: user?.name
     }
 
     setSaving(true)

@@ -45,7 +45,8 @@ function VerifyOtp() {
         email,
         role: state?.role || 'student'
       }
-      setAuthenticatedUser(user, true)
+      const token = data?.token ?? data?.accessToken ?? data?.data?.token ?? data?.data?.accessToken
+      setAuthenticatedUser(user, true, token)
       navigate('/welcome', { replace: true })
     } catch (requestError) {
       setError(getErrorMessage(requestError, 'That verification code is invalid or has expired.'))

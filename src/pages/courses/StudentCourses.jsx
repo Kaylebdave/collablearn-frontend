@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { BookOpen, CheckCircle2, Clock, Download, Search } from 'lucide-react'
-import { getCourses } from '../../api/courses'
+import { Link, useSearchParams } from 'react-router-dom'
+import { BookOpen, CheckCircle2, Clock, Download, Search, UserRoundPlus } from 'lucide-react'
+import { browseCourses, enrollInCourse, getEnrolledCourses } from '../../api/courses'
 import useConnectivityStore from '../../stores/useConnectivityStore'
 import useCourseStore from '../../stores/useCourseStore'
 import './Courses.css'
@@ -12,9 +12,14 @@ const getCourseList = (response) => {
 }
 
 function StudentCourses() {
+  const [searchParams] = useSearchParams()
   const [search, setSearch] = useState('')
+  const [tab, setTab] = useState(() => searchParams.get('view') === 'browse' ? 'browse' : 'mine')
+  const [browseCoursesList, setBrowseCoursesList] = useState([])
   const [loading, setLoading] = useState(false)
+  const [joiningId, setJoiningId] = useState(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const courses = useCourseStore((state) => state.courses)
   const setCourses = useCourseStore((state) => state.setCourses)
   const connectivityOnline = useConnectivityStore((state) => state.isOnline)
@@ -29,7 +34,7 @@ function StudentCourses() {
       if (!isMounted) return null
       setLoading(true)
       setError('')
-      return getCourses()
+      return getEnrolledCourses()
         .then((data) => {
           const remoteCourses = getCourseList(data)
           if (!remoteCourses) throw new Error('Invalid courses response')
@@ -40,7 +45,7 @@ function StudentCourses() {
             status: requestError?.response?.status,
             message: requestError?.response?.data?.message || requestError?.message
           })
-          if (isMounted) setError('Unable to load courses from the server. Showing saved courses.')
+          if (isMounted) setError('Unable to load your enrolled courses. Showing saved courses.')
         })
         .finally(() => {
           if (isMounted) setLoading(false)
@@ -52,7 +57,51 @@ function StudentCourses() {
     }
   }, [isOnline, setCourses])
 
-  const filteredCourses = courses.filter((course) =>
+  useEffect(() => {
+    if (tab !== 'browse' || !isOnline) return undefined
+    let isMounted = true
+    Promise.resolve().then(() => {
+      if (!isMounted) return null
+      setLoading(true)
+      setError('')
+      return browseCourses()
+        .then((data) => {
+          const remoteCourses = getCourseList(data)
+          if (!remoteCourses) throw new Error('Invalid browse courses response')
+          if (isMounted) setBrowseCoursesList(remoteCourses)
+        })
+        .catch((requestError) => {
+          if (isMounted) setError(requestError.response?.data?.message || 'Unable to load courses to browse.')
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false)
+        })
+    })
+    return () => { isMounted = false }
+  }, [tab, isOnline])
+
+  const handleJoin = async (course) => {
+    const courseId = course.id ?? course._id
+    if (courseId == null) return
+    setJoiningId(String(courseId))
+    setError('')
+    setSuccess('')
+    try {
+      const response = await enrollInCourse(courseId)
+      const enrolledCourse = response?.course || response?.data?.course || course
+      setCourses([{ ...enrolledCourse, id: enrolledCourse.id ?? enrolledCourse._id ?? courseId, isEnrolled: true }, ...courses])
+      setBrowseCoursesList((current) => current.filter((item) => String(item.id ?? item._id) !== String(courseId)))
+      setSuccess(`You joined ${course.title || course.name || 'the course'}.`)
+      setTab('mine')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.response?.data?.error || 'Unable to join this course. Please try again.')
+    } finally {
+      setJoiningId(null)
+    }
+  }
+
+  const visibleCourses = tab === 'mine' ? courses : browseCoursesList
+  const filteredCourses = visibleCourses.filter((course) =>
     `${course.code} ${course.title}`.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -60,22 +109,28 @@ function StudentCourses() {
     <div className="courses-page">
       <div className="courses-header">
         <div>
-          <h1>My Courses</h1>
-          <p>{courses.length} enrolled courses</p>
+          <h1>{tab === 'mine' ? 'My Courses' : 'Browse Courses'}</h1>
+          <p>{tab === 'mine' ? `${courses.length} enrolled courses` : 'Find a course to join'}</p>
         </div>
+      </div>
+
+      <div className="course-tabs" role="tablist" aria-label="Course views">
+        <button type="button" role="tab" aria-selected={tab === 'mine'} className={tab === 'mine' ? 'active' : ''} onClick={() => { setTab('mine'); setSearch(''); setSuccess('') }}>My Courses</button>
+        <button type="button" role="tab" aria-selected={tab === 'browse'} className={tab === 'browse' ? 'active' : ''} onClick={() => { setTab('browse'); setSearch(''); setSuccess('') }}>Browse Courses</button>
       </div>
 
       <div className="search-bar">
         <Search size={18} />
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search courses..." />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={tab === 'mine' ? 'Search my courses...' : 'Search courses to join...'} />
       </div>
 
-      {loading && <div className="courses-message">Loading courses...</div>}
+      {loading && <div className="courses-message" role="status">Loading courses...</div>}
       {error && <div className="courses-message error">{error}</div>}
+      {success && <div className="courses-message" role="status">{success}</div>}
 
       <div className="courses-list">
         {filteredCourses.map((course) => (
-          <Link to={`/courses/${course.id}`} key={course.id} className="course-item">
+          <div key={course.id ?? course._id} className="course-item">
             <div className={`course-badge ${course.color || 'blue'}`}><BookOpen size={20} /></div>
             <div className="course-details">
               <div className="course-top">
@@ -83,17 +138,15 @@ function StudentCourses() {
                 {course.status === 'pending' ? <span className="status pending"><Clock size={14} />Pending</span> : course.status === 'syncing' ? <span className="status pending"><Clock size={14} />Syncing</span> : course.status === 'failed' ? <span className="status pending"><Clock size={14} />Sync failed</span> : course.downloaded ? <span className="status downloaded"><CheckCircle2 size={14} />Available offline</span> : <span className="status not-downloaded"><Download size={14} />Download materials</span>}
               </div>
               <h3>{course.title}</h3>
-              <p className="lecturer">{course.lecturer} · {Array.isArray(course.materials) ? course.materials.length : Number(course.materials) || 0} materials</p>
-              <div className="progress-section">
-                <div className="progress-track"><div className="progress-bar" style={{ width: `${course.progress || 0}%` }} /></div>
-                <span>{course.progress || 0}%</span>
-              </div>
+              <p className="lecturer">{course.tutor?.name || course.tutorName || course.lecturer || 'Tutor not listed'} · {Array.isArray(course.materials) ? course.materials.length : Number(course.materials) || 0} materials</p>
+              <div className="progress-section"><span>{Number(course.studentsCount ?? course.studentCount ?? course.enrollments?.length) || 0} students</span></div>
             </div>
-          </Link>
+            {tab === 'mine' ? <Link className="open-course-btn" to={`/courses/${course.id ?? course._id}`}>Open course</Link> : <button className="join-course-btn" type="button" onClick={() => handleJoin(course)} disabled={joiningId === String(course.id ?? course._id)}><UserRoundPlus size={16} />{joiningId === String(course.id ?? course._id) ? 'Joining...' : 'Join course'}</button>}
+          </div>
         ))}
       </div>
 
-      {filteredCourses.length === 0 && <div className="empty-state"><BookOpen size={40} /><p>No courses found</p></div>}
+      {filteredCourses.length === 0 && !loading && <div className="empty-state"><BookOpen size={40} /><p>{tab === 'mine' ? 'You haven’t joined any course yet' : 'No courses are available to join right now.'}</p>{tab === 'mine' && <button type="button" className="browse-empty-btn" onClick={() => setTab('browse')}>Browse Courses</button>}</div>}
     </div>
   )
 }

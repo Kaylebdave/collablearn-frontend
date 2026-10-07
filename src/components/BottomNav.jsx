@@ -5,14 +5,14 @@ import './BottomNav.css'
 function BottomNav() {
   return (
     <nav className="bottom-nav">
-      <NavLink to="/" className="nav-item" end>
-        <Home size={22} />
-        <span>Home</span>
-      </NavLink>
-
       <NavLink to="/courses" className="nav-item">
         <BookOpen size={22} />
         <span>Courses</span>
+      </NavLink>
+
+      <NavLink to="/" className="nav-item" end>
+        <Home size={22} />
+        <span>Home</span>
       </NavLink>
 
       <NavLink to="/discussions" className="nav-item">

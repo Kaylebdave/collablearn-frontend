@@ -9,10 +9,18 @@ import {
   Bell
 } from 'lucide-react'
 import useAuthStore from '../../stores/useAuthStore'
+import useCourseStore from '../../stores/useCourseStore'
+import useDiscussionStore from '../../stores/useDiscussionStore'
+import useGroupStore from '../../stores/useGroupStore'
+import useSyncStore from '../../stores/useSyncStore'
 import './Home.css'
 
 function StudentHome() {
   const user = useAuthStore((state) => state.user)
+  const courses = useCourseStore((state) => state.courses)
+  const discussions = useDiscussionStore((state) => state.posts)
+  const groups = useGroupStore((state) => state.groups)
+  const pendingCount = useSyncStore((state) => state.queue.filter((item) => item.status !== 'synced').length)
 
   return (
     <div className="home-page">
@@ -35,8 +43,8 @@ function StudentHome() {
             Continue your learning journey. Access courses, join discussions, and collaborate with classmates.
           </p>
           <div className="banner-actions">
-            <Link to="/courses" className="banner-btn primary">
-              Continue Learning
+            <Link to={courses.length ? '/courses' : '/courses?view=browse'} className="banner-btn primary">
+              {courses.length ? 'Continue Learning' : 'Browse Courses'}
             </Link>
             <Link to="/groups" className="banner-btn secondary">
               Join Study Group
@@ -59,7 +67,7 @@ function StudentHome() {
             <BookOpen size={18} />
           </div>
           <div>
-            <strong>4</strong>
+            <strong>{courses.length}</strong>
             <span>Courses</span>
           </div>
         </Link>
@@ -68,7 +76,7 @@ function StudentHome() {
             <MessageSquare size={18} />
           </div>
           <div>
-            <strong>12</strong>
+            <strong>{discussions.length}</strong>
             <span>Discussions</span>
           </div>
         </Link>
@@ -77,7 +85,7 @@ function StudentHome() {
             <Users size={18} />
           </div>
           <div>
-            <strong>3</strong>
+            <strong>{groups.length}</strong>
             <span>Groups</span>
           </div>
         </Link>
@@ -86,7 +94,7 @@ function StudentHome() {
             <Clock size={18} />
           </div>
           <div>
-            <strong>2</strong>
+            <strong>{pendingCount}</strong>
             <span>Pending</span>
           </div>
         </Link>
@@ -101,61 +109,36 @@ function StudentHome() {
           </Link>
         </div>
 
-        <div className="courses-grid">
-          <div className="course-card blue">
-            <div className="course-top">
-              <span className="course-code">CSC 301</span>
-              <h3>Database Systems</h3>
-            </div>
-            <div className="course-meta">
-              <span>12 Materials</span>
-              <span>•</span>
-              <span>8 Discussions</span>
-            </div>
-            <div className="course-progress">
-              <div className="progress-track">
-                <div className="progress-bar" style={{ width: '65%' }}></div>
-              </div>
-              <span>65%</span>
-            </div>
-          </div>
+        {courses.length > 0 ? (
+          <div className="courses-grid">
+            {courses.map((course, index) => {
+              const materialsCount = Array.isArray(course.materials)
+                ? course.materials.length
+                : Number(course.materials) || 0
+              const discussionsCount = Number(course.discussionsCount ?? course.discussionCount) || 0
+              const color = course.color || ['blue', 'indigo', 'violet'][index % 3]
 
-          <div className="course-card indigo">
-            <div className="course-top">
-              <span className="course-code">CSC 205</span>
-              <h3>Operating Systems</h3>
-            </div>
-            <div className="course-meta">
-              <span>9 Materials</span>
-              <span>•</span>
-              <span>5 Discussions</span>
-            </div>
-            <div className="course-progress">
-              <div className="progress-track">
-                <div className="progress-bar" style={{ width: '40%' }}></div>
-              </div>
-              <span>40%</span>
-            </div>
+              return (
+                <Link to={`/courses/${course.id ?? course._id}`} className={`course-card ${color}`} key={course.id ?? course._id}>
+                  <div className="course-top">
+                    <span className="course-code">{course.code || ''}</span>
+                    <h3>{course.title || course.name || 'Untitled course'}</h3>
+                  </div>
+                  <div className="course-meta">
+                    <span>{course.tutor?.name || course.tutorName || course.lecturer || 'Tutor not listed'}</span>
+                  </div>
+                  <div className="course-meta">
+                    <span>{materialsCount} materials</span>
+                    <span>{Number(course.studentsCount ?? course.studentCount ?? course.students?.length) || 0} students</span>
+                  </div>
+                  <div className="course-progress"><span>{discussionsCount} discussions</span><ArrowRight size={16} /></div>
+                </Link>
+              )
+            })}
           </div>
-
-          <div className="course-card violet">
-            <div className="course-top">
-              <span className="course-code">MTH 201</span>
-              <h3>Linear Algebra</h3>
-            </div>
-            <div className="course-meta">
-              <span>7 Materials</span>
-              <span>•</span>
-              <span>3 Discussions</span>
-            </div>
-            <div className="course-progress">
-              <div className="progress-track">
-                <div className="progress-bar" style={{ width: '80%' }}></div>
-              </div>
-              <span>80%</span>
-            </div>
-          </div>
-        </div>
+        ) : (
+          <div className="empty-state"><BookOpen size={34} /><p>You haven’t joined any course yet</p><Link to="/courses?view=browse" className="banner-btn primary">Browse Courses</Link></div>
+        )}
       </section>
 
       {/* Recent Activity */}
@@ -164,33 +147,7 @@ function StudentHome() {
           <h2>Recent Activity</h2>
         </div>
         <div className="activity-card">
-          <div className="activity-row">
-            <div className="activity-icon blue">
-              <MessageSquare size={16} />
-            </div>
-            <div className="activity-text">
-              <h4>New reply in “Database Systems”</h4>
-              <p>2 hours ago</p>
-            </div>
-          </div>
-          <div className="activity-row">
-            <div className="activity-icon green">
-              <BookOpen size={16} />
-            </div>
-            <div className="activity-text">
-              <h4>Course material downloaded</h4>
-              <p>Yesterday</p>
-            </div>
-          </div>
-          <div className="activity-row">
-            <div className="activity-icon violet">
-              <Users size={16} />
-            </div>
-            <div className="activity-text">
-              <h4>You joined “CSC 301 Study Group”</h4>
-              <p>2 days ago</p>
-            </div>
-          </div>
+          <div className="activity-row"><div className="activity-text"><p>No recent activity.</p></div></div>
         </div>
       </section>
     </div>

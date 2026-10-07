@@ -62,4 +62,7 @@
 
 .welcome-btn {
   @apply w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold py-3.5 rounded-2xl transition shadow-md;
+  display: block;
+  text-align: center;
+  text-decoration: none;
 }
