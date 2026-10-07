@@ -31,5 +31,13 @@ export const createCourse = (data, userId = data.tutorId) => {
   }).then((response) => response.data)
 }
 
-export const uploadCourseMaterial = (courseId, formData, userId) =>
-  api.post(`/courses/${courseId}/materials`, formData, userRequestConfig(userId)).then((response) => response.data)
+export const uploadCourseMaterial = (courseId, formData, userId) => {
+  const config = userRequestConfig(userId)
+  return api.post(`/courses/${courseId}/materials`, formData, {
+    ...config,
+    headers: {
+      ...config.headers,
+      'Content-Type': false
+    }
+  }).then((response) => response.data)
+}
