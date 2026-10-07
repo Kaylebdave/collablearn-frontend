@@ -25,7 +25,6 @@ function Home() {
   const setCourses = useCourseStore((state) => state.setCourses)
   const setPosts = useDiscussionStore((state) => state.setPosts)
   const setGroups = useGroupStore((state) => state.setGroups)
-  const userRole = user?.role
   const [coursesLoaded, setCoursesLoaded] = useState(false)
 
   useEffect(() => {
@@ -61,7 +60,7 @@ function Home() {
     return () => {
       active = false
     }
-  }, [userId, userRole, isOnline, setCourses, setPosts, setGroups])
+  }, [userId, isOnline, setCourses, setPosts, setGroups])
 
   const isTutor = user?.role === 'tutor'
 
