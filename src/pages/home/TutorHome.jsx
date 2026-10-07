@@ -57,7 +57,7 @@ function TutorHome() {
 
       {/* Tutor Stats */}
       <section className="stats-row">
-        <div className="stat-item">
+        <Link to="/courses" className="stat-item">
           <div className="stat-icon blue">
             <BookOpen size={18} />
           </div>
@@ -65,8 +65,8 @@ function TutorHome() {
             <strong>3</strong>
             <span>My Courses</span>
           </div>
-        </div>
-        <div className="stat-item">
+        </Link>
+        <Link to="/groups" className="stat-item">
           <div className="stat-icon indigo">
             <Users size={18} />
           </div>
@@ -74,8 +74,8 @@ function TutorHome() {
             <strong>48</strong>
             <span>Students</span>
           </div>
-        </div>
-        <div className="stat-item">
+        </Link>
+        <Link to="/discussions" className="stat-item">
           <div className="stat-icon violet">
             <MessageSquare size={18} />
           </div>
@@ -83,8 +83,8 @@ function TutorHome() {
             <strong>15</strong>
             <span>Discussions</span>
           </div>
-        </div>
-        <div className="stat-item">
+        </Link>
+        <Link to="/sync" className="stat-item">
           <div className="stat-icon amber">
             <Clock size={18} />
           </div>
@@ -92,7 +92,7 @@ function TutorHome() {
             <strong>2</strong>
             <span>Pending Sync</span>
           </div>
-        </div>
+        </Link>
       </section>
 
       {/* Quick Actions */}

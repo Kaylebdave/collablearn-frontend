@@ -54,7 +54,7 @@ function StudentHome() {
 
       {/* Stats */}
       <section className="stats-row">
-        <div className="stat-item">
+        <Link to="/courses" className="stat-item">
           <div className="stat-icon blue">
             <BookOpen size={18} />
           </div>
@@ -62,8 +62,8 @@ function StudentHome() {
             <strong>4</strong>
             <span>Courses</span>
           </div>
-        </div>
-        <div className="stat-item">
+        </Link>
+        <Link to="/discussions" className="stat-item">
           <div className="stat-icon indigo">
             <MessageSquare size={18} />
           </div>
@@ -71,8 +71,8 @@ function StudentHome() {
             <strong>12</strong>
             <span>Discussions</span>
           </div>
-        </div>
-        <div className="stat-item">
+        </Link>
+        <Link to="/groups" className="stat-item">
           <div className="stat-icon violet">
             <Users size={18} />
           </div>
@@ -80,8 +80,8 @@ function StudentHome() {
             <strong>3</strong>
             <span>Groups</span>
           </div>
-        </div>
-        <div className="stat-item">
+        </Link>
+        <Link to="/sync" className="stat-item">
           <div className="stat-icon amber">
             <Clock size={18} />
           </div>
@@ -89,7 +89,7 @@ function StudentHome() {
             <strong>2</strong>
             <span>Pending</span>
           </div>
-        </div>
+        </Link>
       </section>
 
       {/* My Courses Preview */}
