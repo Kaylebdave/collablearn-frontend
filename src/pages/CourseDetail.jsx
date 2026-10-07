@@ -169,12 +169,19 @@ function CourseDetail() {
 
     try {
       await uploadCourseMaterial(id, formData, user?.id)
-      await loadCourse()
-      setTitle('')
-      setFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (uploadError) {
       setUploadError(getErrorMessage(uploadError, 'Unable to upload material.'))
+      setUploading(false)
+      return
+    }
+
+    setTitle('')
+    setFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    setUploadError('')
+
+    try {
+      await loadCourse()
     } finally {
       setUploading(false)
     }
