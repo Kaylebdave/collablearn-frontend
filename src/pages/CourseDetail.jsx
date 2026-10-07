@@ -49,7 +49,7 @@ function CourseDetail() {
     setLoadError('')
 
     try {
-      const response = await getCourseById(id)
+      const response = await getCourseById(id, user?.id)
       const fetchedCourse = getCourseFromResponse(response)
 
       if (!fetchedCourse || typeof fetchedCourse !== 'object') {
@@ -72,7 +72,7 @@ function CourseDetail() {
   useEffect(() => {
     let active = true
 
-    if (!isOnline) return () => { active = false }
+    if (!isOnline || !user?.id) return () => { active = false }
 
     Promise.resolve().then(async () => {
       if (!active) return
@@ -108,7 +108,7 @@ function CourseDetail() {
     return () => {
       active = false
     }
-  }, [id, isOnline, localCourse])
+  }, [id, isOnline, localCourse, user?.id])
 
   const handleUpload = async (event) => {
     event.preventDefault()
@@ -125,7 +125,7 @@ function CourseDetail() {
     setUploadError('')
 
     try {
-      await uploadCourseMaterial(id, formData)
+      await uploadCourseMaterial(id, formData, user?.id)
       await loadCourse()
       setTitle('')
       setFile(null)
@@ -138,6 +138,10 @@ function CourseDetail() {
   }
 
   const displayedCourse = String(course?.id) === String(id) ? course : localCourse
+
+  if (!user?.id) {
+    return <div className="course-message error" role="alert">Please login again</div>
+  }
 
   if (loading && isOnline && !displayedCourse) {
     return <div className="course-message">Loading...</div>

@@ -34,7 +34,7 @@ function TutorCourses() {
   const filteredCourses = courses.filter((course) => `${course.code} ${course.title}`.toLowerCase().includes(search.toLowerCase()))
 
   useEffect(() => {
-    if (!isOnline) return
+    if (!isOnline || !user?.id) return
 
     let isMounted = true
 
@@ -42,7 +42,7 @@ function TutorCourses() {
       if (!isMounted) return null
       setLoading(true)
       setError('')
-      return getCreatedCourses()
+      return getCreatedCourses(user.id)
         .then((data) => {
           const remoteCourses = getCourseList(data)
           if (!remoteCourses) throw new Error('Invalid courses response')
@@ -63,10 +63,15 @@ function TutorCourses() {
     return () => {
       isMounted = false
     }
-  }, [isOnline, setCourses])
+  }, [isOnline, setCourses, user?.id])
 
   const handleCreateCourse = async (event) => {
     event.preventDefault()
+
+    if (!user?.id) {
+      setError('Please login again')
+      return
+    }
 
     const values = {
       code: code.trim().toUpperCase(),
@@ -122,6 +127,7 @@ function TutorCourses() {
         <div><h1>Course Management</h1><p>{courses.length} courses under your care</p></div>
         <button className="new-course-btn" onClick={() => setShowModal(true)}><Plus size={18} />New Course</button>
       </div>
+      {!user?.id && <div className="courses-message error" role="alert">Please login again</div>}
       <div className="search-bar"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search your courses..." /></div>
       {loading && <div className="courses-message">Loading courses...</div>}
       {error && <div className="courses-message error">{error}</div>}

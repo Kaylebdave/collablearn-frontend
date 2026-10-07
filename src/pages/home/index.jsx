@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { getCreatedCourses, getEnrolledCourses } from '../../api/courses'
+import { getCourses, getCreatedCourses } from '../../api/courses'
 import { getDiscussions } from '../../api/discussions'
 import { getGroups } from '../../api/groups'
 import useConnectivityStore from '../../stores/useConnectivityStore'
@@ -33,7 +33,7 @@ function Home() {
     let active = true
     const loadDashboardData = async () => {
       const [coursesResult, discussionsResult, groupsResult] = await Promise.allSettled([
-        userRole === 'tutor' ? getCreatedCourses() : getEnrolledCourses(),
+        userRole === 'tutor' ? getCreatedCourses(userId) : getCourses(userId),
         getDiscussions(),
         getGroups()
       ])
@@ -60,6 +60,10 @@ function Home() {
   }, [userId, userRole, isOnline, setCourses, setPosts, setGroups])
 
   const isTutor = user?.role === 'tutor'
+
+  if (!userId) {
+    return <div className="courses-message error" role="alert">Please login again</div>
+  }
 
   return isTutor ? <TutorHome /> : <StudentHome />
 }

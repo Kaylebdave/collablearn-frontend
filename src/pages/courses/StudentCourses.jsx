@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { BookOpen, CheckCircle2, Clock, Download, Search, UserRoundPlus } from 'lucide-react'
-import { browseCourses, enrollInCourse, getEnrolledCourses } from '../../api/courses'
+import { browseCourses, enrollInCourse, getCourses } from '../../api/courses'
+import useAuthStore from '../../stores/useAuthStore'
 import useConnectivityStore from '../../stores/useConnectivityStore'
 import useCourseStore from '../../stores/useCourseStore'
 import './Courses.css'
@@ -20,13 +21,14 @@ function StudentCourses() {
   const [joiningId, setJoiningId] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const userId = useAuthStore((state) => state.user?.id)
   const courses = useCourseStore((state) => state.courses)
   const setCourses = useCourseStore((state) => state.setCourses)
   const connectivityOnline = useConnectivityStore((state) => state.isOnline)
   const isOnline = connectivityOnline || (typeof navigator !== 'undefined' && navigator.onLine)
 
   useEffect(() => {
-    if (!isOnline) return
+    if (!isOnline || !userId) return
 
     let isMounted = true
 
@@ -34,18 +36,21 @@ function StudentCourses() {
       if (!isMounted) return null
       setLoading(true)
       setError('')
-      return getEnrolledCourses()
+      const loadCourses = tab === 'mine' ? getCourses(userId) : browseCourses(userId)
+      return loadCourses
         .then((data) => {
           const remoteCourses = getCourseList(data)
           if (!remoteCourses) throw new Error('Invalid courses response')
-          if (isMounted) setCourses(remoteCourses)
+          if (!isMounted) return
+          if (tab === 'mine') setCourses(remoteCourses)
+          else setBrowseCoursesList(remoteCourses)
         })
         .catch((requestError) => {
           console.warn('Failed to load courses', {
             status: requestError?.response?.status,
             message: requestError?.response?.data?.message || requestError?.message
           })
-          if (isMounted) setError('Unable to load your enrolled courses. Showing saved courses.')
+          if (isMounted) setError(tab === 'mine' ? 'Unable to load your courses. Showing saved courses.' : 'Unable to load courses to browse.')
         })
         .finally(() => {
           if (isMounted) setLoading(false)
@@ -55,42 +60,38 @@ function StudentCourses() {
     return () => {
       isMounted = false
     }
-  }, [isOnline, setCourses])
-
-  useEffect(() => {
-    if (tab !== 'browse' || !isOnline) return undefined
-    let isMounted = true
-    Promise.resolve().then(() => {
-      if (!isMounted) return null
-      setLoading(true)
-      setError('')
-      return browseCourses()
-        .then((data) => {
-          const remoteCourses = getCourseList(data)
-          if (!remoteCourses) throw new Error('Invalid browse courses response')
-          if (isMounted) setBrowseCoursesList(remoteCourses)
-        })
-        .catch((requestError) => {
-          if (isMounted) setError(requestError.response?.data?.message || 'Unable to load courses to browse.')
-        })
-        .finally(() => {
-          if (isMounted) setLoading(false)
-        })
-    })
-    return () => { isMounted = false }
-  }, [tab, isOnline])
+  }, [isOnline, setCourses, tab, userId])
 
   const handleJoin = async (course) => {
+    if (!userId) {
+      setError('Please login again')
+      return
+    }
     const courseId = course.id ?? course._id
     if (courseId == null) return
     setJoiningId(String(courseId))
     setError('')
     setSuccess('')
     try {
-      const response = await enrollInCourse(courseId)
+      const response = await enrollInCourse(courseId, userId)
       const enrolledCourse = response?.course || response?.data?.course || course
-      setCourses([{ ...enrolledCourse, id: enrolledCourse.id ?? enrolledCourse._id ?? courseId, isEnrolled: true }, ...courses])
-      setBrowseCoursesList((current) => current.filter((item) => String(item.id ?? item._id) !== String(courseId)))
+      const [myCoursesResult, browseResult] = await Promise.allSettled([
+        getCourses(userId),
+        browseCourses(userId)
+      ])
+      if (myCoursesResult.status === 'fulfilled') {
+        const myCourses = getCourseList(myCoursesResult.value)
+        if (myCourses) setCourses(myCourses)
+        else setCourses([{ ...enrolledCourse, id: enrolledCourse.id ?? enrolledCourse._id ?? courseId }, ...courses])
+      } else {
+        setCourses([{ ...enrolledCourse, id: enrolledCourse.id ?? enrolledCourse._id ?? courseId }, ...courses])
+      }
+      if (browseResult.status === 'fulfilled') {
+        const availableCourses = getCourseList(browseResult.value)
+        if (availableCourses) setBrowseCoursesList(availableCourses)
+      } else {
+        setBrowseCoursesList((current) => current.filter((item) => String(item.id ?? item._id) !== String(courseId)))
+      }
       setSuccess(`You joined ${course.title || course.name || 'the course'}.`)
       setTab('mine')
     } catch (requestError) {
@@ -100,10 +101,13 @@ function StudentCourses() {
     }
   }
 
-  const visibleCourses = tab === 'mine' ? courses : browseCoursesList
-  const filteredCourses = visibleCourses.filter((course) =>
-    `${course.code} ${course.title}`.toLowerCase().includes(search.toLowerCase())
-  )
+  const visibleCourses = !userId ? [] : tab === 'mine' ? courses : browseCoursesList
+  const filteredCourses = visibleCourses.filter((course) => {
+    const tutorName = course.tutorName || course.tutor?.name || course.lecturer || ''
+    return `${course.title || course.name || ''} ${course.code || ''} ${tutorName}`
+      .toLowerCase()
+      .includes(search.trim().toLowerCase())
+  })
 
   return (
     <div className="courses-page">
@@ -125,6 +129,7 @@ function StudentCourses() {
       </div>
 
       {loading && <div className="courses-message" role="status">Loading courses...</div>}
+      {!userId && <div className="courses-message error" role="alert">Please login again</div>}
       {error && <div className="courses-message error">{error}</div>}
       {success && <div className="courses-message" role="status">{success}</div>}
 
@@ -146,7 +151,7 @@ function StudentCourses() {
         ))}
       </div>
 
-      {filteredCourses.length === 0 && !loading && <div className="empty-state"><BookOpen size={40} /><p>{tab === 'mine' ? 'You haven’t joined any course yet' : 'No courses are available to join right now.'}</p>{tab === 'mine' && <button type="button" className="browse-empty-btn" onClick={() => setTab('browse')}>Browse Courses</button>}</div>}
+      {userId && filteredCourses.length === 0 && !loading && <div className="empty-state"><BookOpen size={40} /><p>{tab === 'mine' ? 'You haven’t joined any course yet' : 'No courses are available to join right now.'}</p>{tab === 'mine' && <button type="button" className="browse-empty-btn" onClick={() => setTab('browse')}>Browse Courses</button>}</div>}
     </div>
   )
 }

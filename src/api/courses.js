@@ -1,26 +1,37 @@
 import api from './axios'
 
-const request = (method, url, data) =>
-  api({ method, url, data }).then((response) => response.data)
+const request = (method, url, data, config = {}) =>
+  api({ method, url, data, ...config }).then((response) => response.data)
 
-export const getCourses = () => request('get', '/courses')
+const userRequestConfig = (userId) => {
+  if (userId == null || userId === '') throw new Error('Please login again')
+  return {
+    params: { userId },
+    headers: { 'X-User-Id': userId }
+  }
+}
 
-export const getEnrolledCourses = () => request('get', '/courses/enrolled')
+export const getCourses = (userId) => request('get', '/courses', undefined, userRequestConfig(userId))
 
-export const getCreatedCourses = () => request('get', '/courses/created')
+export const getCreatedCourses = (userId) => request('get', '/courses/created', undefined, userRequestConfig(userId))
 
-export const browseCourses = () => request('get', '/courses/browse')
+export const browseCourses = (userId) => request('get', '/courses/browse', undefined, userRequestConfig(userId))
 
-export const enrollInCourse = (courseId) => request('post', `/courses/${courseId}/enroll`)
+export const enrollInCourse = (courseId, userId) =>
+  request('post', `/courses/${courseId}/enroll`, { userId }, userRequestConfig(userId))
 
-export const getCourseById = (id) => request('get', `/courses/${id}`)
+export const getCourseById = (id, userId) => request('get', `/courses/${id}`, undefined, userRequestConfig(userId))
 
-export const createCourse = (data) =>
-  api.post('/courses', data, {
+export const createCourse = (data, userId = data.tutorId) => {
+  const config = userRequestConfig(userId)
+  return api.post('/courses', data, {
+    ...config,
     headers: {
+      ...config.headers,
       'Content-Type': 'application/json'
     }
   }).then((response) => response.data)
+}
 
-export const uploadCourseMaterial = (courseId, formData) =>
-  api.post(`/courses/${courseId}/materials`, formData).then((response) => response.data)
+export const uploadCourseMaterial = (courseId, formData, userId) =>
+  api.post(`/courses/${courseId}/materials`, formData, userRequestConfig(userId)).then((response) => response.data)
