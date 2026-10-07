@@ -22,7 +22,7 @@ const useAuthStore = create((set, get) => ({
 
   setAuthenticatedUser: (userData, justSignedUp = false, authToken) => {
     const user = {
-      id: userData.id || userData.userId || Date.now(),
+      id: userData.id ?? userData.userId ?? userData._id ?? Date.now(),
       name: userData.name || userData.fullName || 'Student',
       email: userData.email,
       role: userData.role || 'student',

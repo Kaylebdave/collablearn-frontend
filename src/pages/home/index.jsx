@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { getCourses, getCreatedCourses } from '../../api/courses'
+import { useEffect, useState } from 'react'
+import { getCourses } from '../../api/courses'
 import { getDiscussions } from '../../api/discussions'
 import { getGroups } from '../../api/groups'
 import useConnectivityStore from '../../stores/useConnectivityStore'
@@ -26,6 +26,7 @@ function Home() {
   const setPosts = useDiscussionStore((state) => state.setPosts)
   const setGroups = useGroupStore((state) => state.setGroups)
   const userRole = user?.role
+  const [coursesLoaded, setCoursesLoaded] = useState(false)
 
   useEffect(() => {
     if (!userId || !isOnline) return undefined
@@ -33,7 +34,7 @@ function Home() {
     let active = true
     const loadDashboardData = async () => {
       const [coursesResult, discussionsResult, groupsResult] = await Promise.allSettled([
-        userRole === 'tutor' ? getCreatedCourses(userId) : getCourses(userId),
+        getCourses(userId),
         getDiscussions(),
         getGroups()
       ])
@@ -41,7 +42,10 @@ function Home() {
 
       if (coursesResult.status === 'fulfilled') {
         const courses = getList(coursesResult.value, 'courses')
-        if (courses) setCourses(courses)
+        if (courses) {
+          setCourses(courses)
+          setCoursesLoaded(true)
+        }
       }
       if (discussionsResult.status === 'fulfilled') {
         const posts = getList(discussionsResult.value, 'discussions')
@@ -65,7 +69,7 @@ function Home() {
     return <div className="courses-message error" role="alert">Please login again</div>
   }
 
-  return isTutor ? <TutorHome /> : <StudentHome />
+  return isTutor ? <TutorHome coursesLoaded={coursesLoaded} /> : <StudentHome />
 }
 
 export default Home

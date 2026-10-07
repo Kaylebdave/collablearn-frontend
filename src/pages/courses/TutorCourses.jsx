@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { BookOpen, CheckCircle2, Clock, Plus, Search, Users } from 'lucide-react'
-import { getCreatedCourses } from '../../api/courses'
+import { getCourses } from '../../api/courses'
 import useAuthStore from '../../stores/useAuthStore'
 import useConnectivityStore from '../../stores/useConnectivityStore'
 import useCourseStore from '../../stores/useCourseStore'
@@ -22,6 +22,7 @@ function TutorCourses() {
   const [lecturer, setLecturer] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
+  const [hasLoadedCourses, setHasLoadedCourses] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -42,11 +43,14 @@ function TutorCourses() {
       if (!isMounted) return null
       setLoading(true)
       setError('')
-      return getCreatedCourses(user.id)
+      return getCourses(user.id)
         .then((data) => {
           const remoteCourses = getCourseList(data)
           if (!remoteCourses) throw new Error('Invalid courses response')
-          if (isMounted) setCourses(remoteCourses)
+          if (isMounted) {
+            setCourses(remoteCourses)
+            setHasLoadedCourses(true)
+          }
         })
         .catch((requestError) => {
           console.warn('Failed to load courses', {
@@ -105,7 +109,18 @@ function TutorCourses() {
     setShowModal(false)
     try {
       enqueue('CREATE_COURSE', courseData, localCourse.id)
-      if (isOnline) await syncNow()
+      if (isOnline) {
+        await syncNow()
+        try {
+          const response = await getCourses(user.id)
+          const remoteCourses = getCourseList(response)
+          if (!remoteCourses) throw new Error('Invalid courses response')
+          setCourses(remoteCourses)
+          setHasLoadedCourses(true)
+        } catch (refreshError) {
+          setError(refreshError.response?.data?.message || 'Course created, but the tutor course list could not be refreshed.')
+        }
+      }
     } catch (queueError) {
       setCourseSyncStatus(localCourse.id, 'failed')
       setError(queueError?.message || 'Course saved locally but could not be queued for sync.')
@@ -144,7 +159,7 @@ function TutorCourses() {
           </Link>
         ))}
       </div>
-      {filteredCourses.length === 0 && <div className="empty-state"><BookOpen size={40} /><p>No courses found</p></div>}
+      {filteredCourses.length === 0 && hasLoadedCourses && !loading && <div className="empty-state"><BookOpen size={40} /><p>{search ? 'No courses match your search.' : 'Create your first course'}</p>{!search && <button type="button" className="new-course-btn" onClick={() => setShowModal(true)}><Plus size={18} />Create Course</button>}</div>}
       {showModal && <div className="modal-overlay"><div className="modal"><div className="modal-header"><h2>Create New Course</h2><button type="button" aria-label="Close" onClick={() => setShowModal(false)}>×</button></div><form onSubmit={handleCreateCourse} noValidate>
         <div className="form-group"><label htmlFor="course-code">Course Code</label><input id="course-code" value={code} onChange={updateField('code', setCode)} placeholder="e.g. CSC 301" aria-invalid={Boolean(fieldErrors.code)} aria-describedby={fieldErrors.code ? 'course-code-error' : undefined} />{fieldErrors.code && <p id="course-code-error" className="field-error">{fieldErrors.code}</p>}</div>
         <div className="form-group"><label htmlFor="course-title">Course Title</label><input id="course-title" value={title} onChange={updateField('title', setTitle)} placeholder="e.g. Database Systems" aria-invalid={Boolean(fieldErrors.title)} aria-describedby={fieldErrors.title ? 'course-title-error' : undefined} />{fieldErrors.title && <p id="course-title-error" className="field-error">{fieldErrors.title}</p>}</div>

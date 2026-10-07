@@ -13,8 +13,6 @@ const userRequestConfig = (userId) => {
 
 export const getCourses = (userId) => request('get', '/courses', undefined, userRequestConfig(userId))
 
-export const getCreatedCourses = (userId) => request('get', '/courses/created', undefined, userRequestConfig(userId))
-
 export const browseCourses = (userId) => request('get', '/courses/browse', undefined, userRequestConfig(userId))
 
 export const enrollInCourse = (courseId, userId) =>

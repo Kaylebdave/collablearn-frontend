@@ -40,7 +40,7 @@ function VerifyOtp() {
     try {
       const data = await verifyOtp({ email, otp: trimmedOtp })
       const user = data?.user || {
-        id: data?.id,
+        id: data?.id ?? data?._id ?? data?.userId,
         name: state?.name,
         email,
         role: state?.role || 'student'

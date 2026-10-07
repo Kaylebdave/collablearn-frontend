@@ -25,7 +25,7 @@ const getMaterialCount = (course) => Array.isArray(course.materials)
   ? course.materials.length
   : Number(course.materialsCount ?? course.materialCount ?? course.materials) || 0
 
-function TutorHome() {
+function TutorHome({ coursesLoaded = false }) {
   const user = useAuthStore((state) => state.user)
   const courses = useCourseStore((state) => state.courses)
   const discussions = useDiscussionStore((state) => state.posts)
@@ -121,7 +121,7 @@ function TutorHome() {
             <div className="course-meta"><span>{getCourseStudents(course)} students</span><span>{getMaterialCount(course)} materials</span></div>
             <div className="course-progress"><span>Manage class</span><ArrowRight size={16} /></div>
           </Link>)}
-        </div> : <div className="empty-state"><BookOpen size={34} /><p>Create your first course</p><Link to="/courses?action=create" className="banner-btn primary"><PlusCircle size={17} />Create Course</Link></div>}
+        </div> : coursesLoaded ? <div className="empty-state"><BookOpen size={34} /><p>Create your first course</p><Link to="/courses?action=create" className="banner-btn primary"><PlusCircle size={17} />Create Course</Link></div> : <div className="courses-message" role="status">Loading your courses...</div>}
       </section>
 
       {/* Quick Actions */}
