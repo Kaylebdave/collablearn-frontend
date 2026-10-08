@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, CheckCircle2, Download, FileText, MessageSquare, Upload, Users } from 'lucide-react'
 import { getCourseById, uploadCourseMaterial } from '../api/courses'
-import { getDiscussions } from '../api/discussions'
+import { createDiscussion, getDiscussions } from '../api/discussions'
 import useAuthStore from '../stores/useAuthStore'
 import useConnectivityStore from '../stores/useConnectivityStore'
 import useCourseStore from '../stores/useCourseStore'
@@ -26,6 +26,8 @@ const getErrorMessage = (requestError, fallback) => {
 
 const displayText = (value, fallback) =>
   typeof value === 'string' || typeof value === 'number' ? String(value) : fallback
+const getAuthorName = (author, fallback = 'Author not provided') =>
+  typeof author === 'string' ? author : author?.name || author?.fullName || fallback
 const allowedMaterialExtensions = new Set(['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'ppt', 'pptx'])
 
 function CourseDetail() {
@@ -50,6 +52,10 @@ function CourseDetail() {
   const [courseDiscussionPosts, setCourseDiscussionPosts] = useState(null)
   const [discussionLoading, setDiscussionLoading] = useState(false)
   const [discussionError, setDiscussionError] = useState('')
+  const [showDiscussionForm, setShowDiscussionForm] = useState(false)
+  const [newDiscussionTitle, setNewDiscussionTitle] = useState('')
+  const [newDiscussionContent, setNewDiscussionContent] = useState('')
+  const [creatingDiscussion, setCreatingDiscussion] = useState(false)
 
   const loadCourse = async () => {
     if (!isOnline) {
@@ -187,6 +193,57 @@ function CourseDetail() {
     }
   }
 
+  const handleCreateDiscussion = async (event) => {
+    event.preventDefault()
+    if (!user?.id) {
+      setDiscussionError('Please login again')
+      return
+    }
+    if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) {
+      setDiscussionError('Enter a title and message for your discussion.')
+      return
+    }
+
+    setCreatingDiscussion(true)
+    setDiscussionError('')
+    const payload = {
+      title: newDiscussionTitle.trim(),
+      content: newDiscussionContent.trim(),
+      courseId: id,
+      course: displayedCourse.code || displayedCourse.title,
+      userId: user.id,
+      author: user.name || ''
+    }
+
+    try {
+      const response = await createDiscussion(payload)
+      const created = response?.discussion || response?.data?.discussion || response?.data || response
+      const createdPost = {
+        ...created,
+        id: created?.id ?? created?._id,
+        courseId: created?.courseId ?? id,
+        course: created?.course ?? payload.course,
+        author: created?.author ?? payload.author
+      }
+      setCourseDiscussionPosts((currentPosts) => [
+        createdPost,
+        ...(currentPosts || []).filter((post) => String(post.id ?? post._id) !== String(createdPost.id))
+      ])
+      setNewDiscussionTitle('')
+      setNewDiscussionContent('')
+      setShowDiscussionForm(false)
+
+      const refreshed = await getDiscussions({ courseId: id, userId: user.id })
+      const posts = getDiscussionList(refreshed)
+      if (!posts) throw new Error('Discussion created, but the course list response was invalid.')
+      setCourseDiscussionPosts(posts)
+    } catch (requestError) {
+      setDiscussionError(getErrorMessage(requestError, 'Unable to create or refresh this discussion.'))
+    } finally {
+      setCreatingDiscussion(false)
+    }
+  }
+
   const displayedCourse = String(course?.id) === String(id) ? course : localCourse
 
   if (!user?.id) {
@@ -280,7 +337,21 @@ function CourseDetail() {
         })}</div>}
       </section>}
 
-      {activeTab === 'discussion' && <section className="detail-section"><div className="section-header"><h3>Course discussion</h3><span className="material-count">{courseDiscussions.length}</span></div>{discussionError && <div className="course-message error" role="alert">{discussionError}</div>}{discussionLoading ? <div className="materials-empty" role="status">Loading course discussions...</div> : courseDiscussions.length ? <div className="course-related-list">{courseDiscussions.map((post) => <Link to={`/discussions/${post.id ?? post._id}`} className="course-related-item" key={post.id ?? post._id}><MessageSquare size={18} /><div><strong>{post.title || 'Discussion thread'}</strong><span>{post.author?.name || post.authorName || (typeof post.author === 'string' ? post.author : 'Author not provided')} · {post.replies?.length || 0} replies</span></div></Link>)}</div> : <div className="materials-empty">No discussions for this course yet.</div>}</section>}
+      {activeTab === 'discussion' && <section className="detail-section course-discussions-section">
+        <div className="section-header">
+          <div><h3>Course discussion</h3><span className="discussion-section-count">{courseDiscussions.length} threads</span></div>
+          <button type="button" className="start-discussion-btn" onClick={() => { setShowDiscussionForm((isOpen) => !isOpen); setDiscussionError('') }}><MessageSquare size={16} />{showDiscussionForm ? 'Cancel' : 'Start discussion'}</button>
+        </div>
+        {discussionError && <div className="course-message error" role="alert">{discussionError}</div>}
+        {showDiscussionForm && <form className="course-discussion-form" onSubmit={handleCreateDiscussion}>
+          <label htmlFor="course-discussion-title">Title</label>
+          <input id="course-discussion-title" value={newDiscussionTitle} onChange={(event) => setNewDiscussionTitle(event.target.value)} disabled={creatingDiscussion} required />
+          <label htmlFor="course-discussion-content">Message</label>
+          <textarea id="course-discussion-content" rows="4" value={newDiscussionContent} onChange={(event) => setNewDiscussionContent(event.target.value)} disabled={creatingDiscussion} required />
+          <button className="upload-submit" type="submit" disabled={creatingDiscussion}><MessageSquare size={16} />{creatingDiscussion ? 'Posting...' : 'Post discussion'}</button>
+        </form>}
+        {discussionLoading ? <div className="materials-empty" role="status">Loading course discussions...</div> : courseDiscussions.length ? <div className="course-related-list">{courseDiscussions.map((post) => <Link to={`/discussions/${post.id ?? post._id}`} state={{ courseId: id, courseTitle: displayedCourse.code || displayedCourse.title }} className="course-related-item discussion-list-item" key={post.id ?? post._id}><MessageSquare size={18} /><div><strong>{post.title || 'Discussion thread'}</strong><p>{post.content || ''}</p><span>{getAuthorName(post.author || post.authorName)} · {post.replies?.length ?? post.replyCount ?? 0} replies</span></div></Link>)}</div> : <div className="discussion-empty-state"><MessageSquare size={28} /><p>No discussions for this course yet.</p><button type="button" className="start-discussion-btn" onClick={() => { setShowDiscussionForm(true); setDiscussionError('') }}>Start discussion</button></div>}
+      </section>}
 
       {activeTab === 'people' && <section className="detail-section"><div className="section-header"><h3>{user?.role === 'tutor' ? 'Students in this course' : 'Classmates'}</h3><span className="material-count">{Array.isArray(people) ? people.length : 0}</span></div><div className="course-people-list"><div className="course-person tutor-person"><div className="person-avatar">{tutorName.slice(0, 1).toUpperCase()}</div><div><strong>{tutorName}</strong><span>Course tutor</span></div></div>{Array.isArray(people) && people.filter((person) => person && (typeof person === 'object' || typeof person === 'string')).map((person, index) => { const name = typeof person === 'string' ? person : person.name || person.fullName; if (!name || name === tutorName) return null; return <div className="course-person" key={person.id ?? person._id ?? person.email ?? `${name}-${index}`}><div className="person-avatar">{name.slice(0, 1).toUpperCase()}</div><div><strong>{name}</strong><span>{person.role === 'tutor' ? 'Tutor' : 'Student'}</span></div></div> })}</div>{(!Array.isArray(people) || people.length === 0) && <div className="materials-empty">No student roster is available for this course yet.</div>}</section>}
 

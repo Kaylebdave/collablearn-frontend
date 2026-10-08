@@ -9,6 +9,7 @@ import useSyncStore from '../stores/useSyncStore'
 import './DiscussionDetail.css'
 
 const getDiscussion = (response) => response?.discussion || response?.data?.discussion || response?.data || response
+const getAuthorName = (author) => typeof author === 'string' ? author : author?.name || author?.fullName || 'Author not provided'
 
 const getResponseMessage = (requestError, fallback) => {
   const responseData = requestError?.response?.data
@@ -61,14 +62,14 @@ function DiscussionDetail() {
   )
 
   useEffect(() => {
-    if (!isOnline) return undefined
+    if (!isOnline || !user?.id) return undefined
 
     let active = true
     Promise.resolve().then(() => {
       if (!active) return null
       setLoading(true)
       setError('')
-      return getDiscussionById(id)
+      return getDiscussionById(id, user.id)
         .then((response) => {
           const remotePost = getDiscussion(response)
           if (!remotePost || typeof remotePost !== 'object') throw new Error('Invalid discussion response')
@@ -90,7 +91,7 @@ function DiscussionDetail() {
     return () => {
       active = false
     }
-  }, [id, isOnline, updatePost])
+  }, [id, isOnline, updatePost, user?.id])
 
   const handleReply = async (event) => {
     event.preventDefault()
@@ -100,7 +101,8 @@ function DiscussionDetail() {
     const localId = createLocalId()
     const requestPayload = {
       content: replyText,
-      author: user?.name?.trim() || ''
+      author: user?.name?.trim() || '',
+      userId: user?.id
     }
     const optimisticReply = {
       id: localId,
@@ -133,6 +135,10 @@ function DiscussionDetail() {
     } finally {
       setSending(false)
     }
+  }
+
+  if (!user?.id) {
+    return <div className="discussion-detail-page"><div className="courses-message error" role="alert">Please login again</div></div>
   }
 
   if (isOnline && loading && !post) {
@@ -179,7 +185,7 @@ function DiscussionDetail() {
         <p className="post-body">{post.content}</p>
 
         <div className="post-footer">
-          <span>{post.author}</span>
+          <span>{getAuthorName(post.author)}</span>
           <span>•</span>
           <span>{post.time}</span>
         </div>
@@ -203,7 +209,7 @@ function DiscussionDetail() {
               return (
               <div key={`${keyBase}-${index}`} className="reply-card">
                 <div className="reply-header">
-                  <strong>{reply.author}</strong>
+                  <strong>{getAuthorName(reply.author)}</strong>
                   <span>{reply.time}</span>
                   {['pending', 'syncing', 'failed'].includes(reply.status) && (
                     <span className="pending-badge small">

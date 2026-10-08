@@ -14,7 +14,8 @@ export const sendSyncItem = async (item) => {
     case 'CREATE_REPLY': {
       const response = await createDiscussionReply(payload.discussionId, {
         content: payload.content,
-        author: payload.author
+        author: payload.author,
+        userId: payload.userId
       })
       const data = response?.data ?? response
       const replies = Array.isArray(data?.replies)
