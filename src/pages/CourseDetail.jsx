@@ -8,6 +8,8 @@ import useConnectivityStore from '../stores/useConnectivityStore'
 import useCourseStore from '../stores/useCourseStore'
 import useDiscussionStore from '../stores/useDiscussionStore'
 import useGroupStore from '../stores/useGroupStore'
+import useSyncStore from '../stores/useSyncStore'
+import { isNetworkFailure } from '../services/syncEngine'
 import './CourseDetail.css'
 
 const getCourseFromResponse = (response) => response?.course || response?.data?.course || response?.data || response
@@ -36,7 +38,9 @@ function CourseDetail() {
   const user = useAuthStore((state) => state.user)
   const courses = useCourseStore((state) => state.courses)
   const discussions = useDiscussionStore((state) => state.posts)
+  const addPost = useDiscussionStore((state) => state.addPost)
   const groups = useGroupStore((state) => state.groups)
+  const enqueue = useSyncStore((state) => state.enqueue)
   const connectivityOnline = useConnectivityStore((state) => state.isOnline)
   const isOnline = connectivityOnline || (typeof navigator !== 'undefined' && navigator.onLine)
   const localCourse = courses.find((item) => String(item.id) === String(id)) || null
@@ -50,8 +54,10 @@ function CourseDetail() {
   const [uploading, setUploading] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
   const [courseDiscussionPosts, setCourseDiscussionPosts] = useState(null)
+  const [discussionListCourseId, setDiscussionListCourseId] = useState(null)
   const [discussionLoading, setDiscussionLoading] = useState(false)
   const [discussionError, setDiscussionError] = useState('')
+  const [discussionNotice, setDiscussionNotice] = useState('')
   const [showDiscussionForm, setShowDiscussionForm] = useState(false)
   const [newDiscussionTitle, setNewDiscussionTitle] = useState('')
   const [newDiscussionContent, setNewDiscussionContent] = useState('')
@@ -139,11 +145,15 @@ function CourseDetail() {
         .then((response) => {
           const posts = getDiscussionList(response)
           if (!posts) throw new Error('Invalid discussions response')
-          if (active) setCourseDiscussionPosts(posts)
+          if (active) {
+            setCourseDiscussionPosts(posts)
+            setDiscussionListCourseId(id)
+          }
         })
         .catch((requestError) => {
           if (!active) return
           setCourseDiscussionPosts([])
+          setDiscussionListCourseId(id)
           setDiscussionError(getErrorMessage(requestError, 'Unable to load course discussions.'))
         })
         .finally(() => {
@@ -206,37 +216,57 @@ function CourseDetail() {
 
     setCreatingDiscussion(true)
     setDiscussionError('')
+    setDiscussionNotice('')
+    const courseId = displayedCourse.id ?? displayedCourse._id ?? id
+    const courseName = displayedCourse.code || displayedCourse.title
     const payload = {
       title: newDiscussionTitle.trim(),
       content: newDiscussionContent.trim(),
-      courseId: id,
-      course: displayedCourse.code || displayedCourse.title,
-      userId: user.id,
-      author: user.name || ''
+      courseId,
+      userId: user.id
     }
 
+    let shouldRefresh = false
     try {
-      const response = await createDiscussion(payload)
-      const created = response?.discussion || response?.data?.discussion || response?.data || response
-      const createdPost = {
-        ...created,
-        id: created?.id ?? created?._id,
-        courseId: created?.courseId ?? id,
-        course: created?.course ?? payload.course,
-        author: created?.author ?? payload.author
+      if (isOnline) {
+        try {
+          const response = await createDiscussion(payload)
+          const created = response?.discussion || response?.data?.discussion || response?.data || response
+          addPost({
+            ...payload,
+            ...created,
+            courseId: created?.courseId ?? courseId,
+            course: created?.course ?? courseName,
+            author: created?.author ?? user.name ?? ''
+          }, true)
+          shouldRefresh = true
+        } catch (requestError) {
+          if (!isNetworkFailure(requestError)) throw requestError
+          const localPost = addPost({ ...payload, course: courseName, author: user.name || '' }, false)
+          enqueue('CREATE_DISCUSSION', { ...payload, course: courseName, author: user.name || '' }, localPost.id)
+          setDiscussionNotice('Saved offline. It will post when your connection returns.')
+        }
+      } else {
+        const localPost = addPost({ ...payload, course: courseName, author: user.name || '' }, false)
+        enqueue('CREATE_DISCUSSION', { ...payload, course: courseName, author: user.name || '' }, localPost.id)
+        setDiscussionNotice('Saved offline. It will post when your connection returns.')
       }
-      setCourseDiscussionPosts((currentPosts) => [
-        createdPost,
-        ...(currentPosts || []).filter((post) => String(post.id ?? post._id) !== String(createdPost.id))
-      ])
+
       setNewDiscussionTitle('')
       setNewDiscussionContent('')
       setShowDiscussionForm(false)
 
-      const refreshed = await getDiscussions({ courseId: id, userId: user.id })
-      const posts = getDiscussionList(refreshed)
-      if (!posts) throw new Error('Discussion created, but the course list response was invalid.')
-      setCourseDiscussionPosts(posts)
+      if (shouldRefresh) {
+        try {
+          const refreshed = await getDiscussions({ courseId, userId: user.id })
+          const posts = getDiscussionList(refreshed)
+          if (!posts) throw new Error('Invalid course discussion response')
+          setCourseDiscussionPosts(posts)
+          setDiscussionListCourseId(courseId)
+        } catch (refreshError) {
+          setDiscussionError(getErrorMessage(refreshError, 'Discussion posted, but the course list could not refresh.'))
+        }
+      }
     } catch (requestError) {
       setDiscussionError(getErrorMessage(requestError, 'Unable to create or refresh this discussion.'))
     } finally {
@@ -271,18 +301,21 @@ function CourseDetail() {
   const tutorName = typeof tutor === 'string' ? tutor : tutor?.name || displayedCourse.tutorName || 'Tutor not listed'
   const people = displayedCourse.students || displayedCourse.enrolledStudents || displayedCourse.classmates || displayedCourse.learners || []
   const courseMatches = (item) => {
-    const linkedCourseId = item.courseId ?? item.course?.id ?? item.course?._id
-    const linkedCourse = typeof item.course === 'string' ? item.course : item.course?.code ?? item.course?.title
-    return (linkedCourseId != null && String(linkedCourseId) === String(id)) ||
-      (linkedCourse && [displayedCourse.code, displayedCourse.title].some((value) => value && String(value).toLowerCase() === String(linkedCourse).toLowerCase()))
+    const linkedCourseId = item?.courseId ?? item?.course?.id ?? item?.course?._id
+    const linkedCourse = typeof item?.course === 'string' ? item.course : item?.course?.code ?? item?.course?.title
+    if (linkedCourseId != null) return String(linkedCourseId) === String(id)
+    return Boolean(linkedCourse && [displayedCourse.code, displayedCourse.title].some((value) => value && String(value).toLowerCase() === String(linkedCourse).toLowerCase()))
   }
-  const courseDiscussions = courseDiscussionPosts
-    ? courseDiscussionPosts.filter((post) => {
-        const linkedCourseId = post.courseId ?? post.course?.id ?? post.course?._id
-        const linkedCourse = typeof post.course === 'string' ? post.course : post.course?.code ?? post.course?.title
-        return (linkedCourseId == null && !linkedCourse) || courseMatches(post)
-      })
-    : discussions.filter(courseMatches)
+  const discussionMap = new Map()
+  for (const post of [
+    ...(String(discussionListCourseId) === String(id) ? courseDiscussionPosts || [] : []),
+    ...discussions.filter(courseMatches)
+  ]) {
+    const postId = post.id ?? post._id ?? post.localId
+    const key = postId == null ? `${post.courseId}:${post.title}:${post.content}` : String(postId)
+    discussionMap.set(key, { ...discussionMap.get(key), ...post })
+  }
+  const courseDiscussions = [...discussionMap.values()]
   const courseGroups = groups.filter(courseMatches)
   const tabItems = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
@@ -343,6 +376,7 @@ function CourseDetail() {
           <button type="button" className="start-discussion-btn" onClick={() => { setShowDiscussionForm((isOpen) => !isOpen); setDiscussionError('') }}><MessageSquare size={16} />{showDiscussionForm ? 'Cancel' : 'Start discussion'}</button>
         </div>
         {discussionError && <div className="course-message error" role="alert">{discussionError}</div>}
+        {discussionNotice && <div className="course-message" role="status">{discussionNotice}</div>}
         {showDiscussionForm && <form className="course-discussion-form" onSubmit={handleCreateDiscussion}>
           <label htmlFor="course-discussion-title">Title</label>
           <input id="course-discussion-title" value={newDiscussionTitle} onChange={(event) => setNewDiscussionTitle(event.target.value)} disabled={creatingDiscussion} required />

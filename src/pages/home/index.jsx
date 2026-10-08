@@ -34,7 +34,7 @@ function Home() {
     const loadDashboardData = async () => {
       const [coursesResult, discussionsResult, groupsResult] = await Promise.allSettled([
         getCourses(userId),
-        getDiscussions(),
+        getDiscussions({ userId }),
         getGroups()
       ])
       if (!active) return

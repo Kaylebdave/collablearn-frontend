@@ -40,7 +40,12 @@ export const sendSyncItem = async (item) => {
       return { record: unwrapResponse(response, 'course'), localId }
     }
     case 'CREATE_DISCUSSION': {
-      const response = await createDiscussion(payload)
+      const response = await createDiscussion({
+        courseId: payload.courseId,
+        title: payload.title,
+        content: payload.content,
+        userId: payload.userId
+      })
       return { record: unwrapResponse(response, 'discussion'), localId }
     }
     case 'CREATE_GROUP': {

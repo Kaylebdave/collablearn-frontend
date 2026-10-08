@@ -13,10 +13,14 @@ export const readSyncQueue = () => {
   try {
     const queue = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
     if (!Array.isArray(queue)) return []
+    const ownerUserId = localStorage.getItem(OWNER_KEY)
     return queue.map((item) => {
-      const payload = item.type === 'CREATE_REPLY' && item.payload?.data
+      let payload = item.type === 'CREATE_REPLY' && item.payload?.data
         ? { ...item.payload.data, discussionId: item.payload.discussionId }
         : item.payload
+      if (['CREATE_DISCUSSION', 'CREATE_REPLY'].includes(item.type) && payload?.userId == null && ownerUserId) {
+        payload = { ...payload, userId: ownerUserId }
+      }
       const { entityId, ...queueItem } = item
       return {
         ...queueItem,

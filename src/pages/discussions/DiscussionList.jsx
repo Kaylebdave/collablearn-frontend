@@ -29,7 +29,7 @@ function DiscussionList() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!isOnline) return
+    if (!isOnline || !user?.id) return
 
     let active = true
 
@@ -37,7 +37,7 @@ function DiscussionList() {
       if (!active) return null
       setLoading(true)
       setError('')
-      return getDiscussions()
+      return getDiscussions({ userId: user.id })
         .then((response) => {
           const remotePosts = getDiscussionList(response)
           if (!remotePosts) throw new Error('Invalid discussions response')
@@ -58,7 +58,7 @@ function DiscussionList() {
     return () => {
       active = false
     }
-  }, [isOnline, setPosts])
+  }, [isOnline, setPosts, user?.id])
 
   const filteredPosts = posts.filter((post) =>
     `${post.title || ''} ${post.course || ''} ${post.author || ''}`.toLowerCase().includes(search.toLowerCase())

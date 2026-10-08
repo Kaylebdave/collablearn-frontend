@@ -4,6 +4,7 @@ import { createDiscussion } from '../../api/discussions'
 import useAuthStore from '../../stores/useAuthStore'
 import useConnectivityStore from '../../stores/useConnectivityStore'
 import useDiscussionStore from '../../stores/useDiscussionStore'
+import useCourseStore from '../../stores/useCourseStore'
 import useSyncStore from '../../stores/useSyncStore'
 import { isNetworkFailure } from '../../services/syncEngine'
 
@@ -20,21 +21,33 @@ function DiscussionComposer({ onClose, onCreated }) {
   const connectivityOnline = useConnectivityStore((state) => state.isOnline)
   const isOnline = connectivityOnline || (typeof navigator !== 'undefined' && navigator.onLine)
   const addPost = useDiscussionStore((state) => state.addPost)
+  const courses = useCourseStore((state) => state.courses)
   const enqueue = useSyncStore((state) => state.enqueue)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [course, setCourse] = useState('')
+  const [courseId, setCourseId] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (!user?.id) {
+      setError('Please login again')
+      return
+    }
+
+    const selectedCourse = courses.find((item) => String(item.id ?? item._id) === String(courseId))
     const payload = {
       title: title.trim(),
       content: content.trim(),
-      author: user?.name?.trim() || '',
-      course: course.trim()
+      courseId: selectedCourse?.id ?? selectedCourse?._id,
+      userId: user.id
+    }
+    const localPostData = {
+      ...payload,
+      course: selectedCourse?.code || selectedCourse?.title || selectedCourse?.name || '',
+      author: user.name?.trim() || ''
     }
     const nextErrors = Object.fromEntries(
       Object.entries(payload)
@@ -55,10 +68,10 @@ function DiscussionComposer({ onClose, onCreated }) {
           setError('Discussion was created, but the server returned an invalid response.')
           return
         }
-        addPost(createdDiscussion, true)
+        addPost({ ...localPostData, ...createdDiscussion, author: createdDiscussion.author ?? localPostData.author }, true)
       } else {
-        const localDiscussion = addPost(payload, false)
-        enqueue('CREATE_DISCUSSION', payload, localDiscussion.id)
+        const localDiscussion = addPost(localPostData, false)
+        enqueue('CREATE_DISCUSSION', localPostData, localDiscussion.id)
       }
       onCreated?.()
       onClose()
@@ -69,8 +82,8 @@ function DiscussionComposer({ onClose, onCreated }) {
         message: getResponseMessage(requestError, 'Request failed')
       })
       if (isNetworkFailure(requestError)) {
-        const localDiscussion = addPost(payload, false)
-        enqueue('CREATE_DISCUSSION', payload, localDiscussion.id)
+        const localDiscussion = addPost(localPostData, false)
+        enqueue('CREATE_DISCUSSION', localPostData, localDiscussion.id)
         onCreated?.()
         onClose()
       } else {
@@ -115,7 +128,14 @@ function DiscussionComposer({ onClose, onCreated }) {
         </div>
         <form onSubmit={handleSubmit} noValidate>
           {field('title', 'Title', title, setTitle)}
-          {field('course', 'Course', course, setCourse)}
+          <div className="form-group">
+            <label htmlFor="discussion-course">Course</label>
+            <select id="discussion-course" value={courseId} onChange={updateField('courseId', setCourseId)} aria-invalid={Boolean(fieldErrors.courseId)} required>
+              <option value="">Select a course</option>
+              {courses.map((item) => <option key={item.id ?? item._id} value={item.id ?? item._id}>{item.code || item.title || item.name || 'Course'}</option>)}
+            </select>
+            {fieldErrors.courseId && <p className="field-error">Select a course.</p>}
+          </div>
           {field('content', 'Message', content, setContent, true)}
           <div className="form-group"><label htmlFor="discussion-author">Author</label><input id="discussion-author" value={user?.name || ''} readOnly /></div>
           {error && <p className="form-error">{error}</p>}
